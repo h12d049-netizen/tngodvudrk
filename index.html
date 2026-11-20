@@ -4106,7 +4106,665 @@ const ML_CONFIG = {
     }
 };
     </script>
-    <script src="script.js"></script>
+ /* TeenCos AI - 기능 스크립트
+   index.html 안에 선언된 COSMETICS_DATASET, CATEGORIES,
+   SENTIMENT_LEXICON, INGREDIENT_DICT, ML_CONFIG를 사용합니다.
+*/
+(() => {
+  "use strict";
+
+  const $ = (selector, root = document) => root.querySelector(selector);
+  const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
+  const money = value => Number(value || 0).toLocaleString("ko-KR") + "원";
+  const safe = value => String(value ?? "").replace(/[&<>"']/g, ch => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[ch]));
+
+  const products = Array.isArray(window.COSMETICS_DATASET)
+    ? window.COSMETICS_DATASET
+    : (typeof COSMETICS_DATASET !== "undefined" ? COSMETICS_DATASET : []);
+
+  const categories = typeof CATEGORIES !== "undefined" ? CATEGORIES : {};
+  const lexicon = typeof SENTIMENT_LEXICON !== "undefined" ? SENTIMENT_LEXICON : {positive:{},negative:{}};
+  const ingredientDict = typeof INGREDIENT_DICT !== "undefined" ? INGREDIENT_DICT : {};
+  const mlConfig = typeof ML_CONFIG !== "undefined" ? ML_CONFIG : {defaultK:3,weights:{}};
+
+  let selectedForCompare = [];
+  let lastRanked = [];
+  let currentCategory = "all";
+
+  const state = {
+    k: Number(mlConfig.defaultK || 3),
+    weights: {
+      price: Number(mlConfig.weights?.priceWeight ?? 0.35),
+      ingredient: Number(mlConfig.weights?.ingredientWeight ?? 0.25),
+      sentiment: Number(mlConfig.weights?.sentimentWeight ?? 0.20),
+      match: Number(mlConfig.weights?.matchWeight ?? 0.20)
+    }
+  };
+
+  function getInput(id, fallback = "") {
+    return document.getElementById(id)?.value ?? fallback;
+  }
+
+  function sentimentScore(product) {
+    const reviews = (product.sampleReviews || []).join(" ");
+    let positive = 0, negative = 0;
+
+    Object.entries(lexicon.positive || {}).forEach(([word, weight]) => {
+      if (reviews.includes(word)) positive += Number(weight);
+    });
+
+    Object.entries(lexicon.negative || {}).forEach(([word, weight]) => {
+      if (reviews.includes(word)) negative += Math.abs(Number(weight));
+    });
+
+    const lexical = positive + negative > 0
+      ? Math.max(0, Math.min(100, 50 + (positive - negative) * 4))
+      : 70;
+
+    const rating = Number(product.hwahaeRating ?? product.rating ?? 3.5);
+    const ratingScore = Math.max(0, Math.min(100, rating / 5 * 100));
+
+    return Math.round(lexical * 0.45 + ratingScore * 0.55);
+  }
+
+  function ingredientScore(product) {
+    const caution = Number(product.cautionIngredients || 0);
+    const allergy = Number(product.allergyCaution || 0);
+    const ewg = Number(product.ewgGreenRate ?? 70);
+
+    return Math.max(0, Math.min(100, ewg - caution * 8 - allergy * 5));
+  }
+
+  function priceScore(product, maxPrice) {
+    const unitPrice = Number(product.price || 0) /
+      Math.max(1, Number(product.capacity || 1));
+
+    const unitPrices = products.map(p =>
+      Number(p.price || 0) / Math.max(1, Number(p.capacity || 1))
+    );
+
+    const min = Math.min(...unitPrices);
+    const max = Math.max(...unitPrices);
+
+    const normalized = max === min
+      ? 100
+      : 100 - ((unitPrice - min) / (max - min)) * 100;
+
+    const withinBudget = Number(product.price || 0) <= maxPrice ? 100 : 0;
+
+    return Math.round(normalized * 0.75 + withinBudget * 0.25);
+  }
+
+  function matchScore(product, skinType, troubles, tone) {
+    const skinTypes = product.skinTypes || [];
+    const productTroubles = product.troubles || [];
+
+    const skin = skinTypes.includes(skinType) || skinTypes.includes("all")
+      ? 1 : 0.35;
+
+    const trouble = troubles.length
+      ? troubles.filter(t => productTroubles.includes(t)).length / troubles.length
+      : 0.7;
+
+    const productTone = product.personalColor || "all";
+
+    const toneScore = tone === "all" || productTone === "all" ? 1
+      : productTone === tone ? 1
+      : productTone === "neutral" ? 0.8 : 0.3;
+
+    return Math.round((skin * 0.45 + trouble * 0.35 + toneScore * 0.20) * 100);
+  }
+
+  function getFeatures(product) {
+    const maxPrice = Number(getInput("inputPrice", 30000));
+    const skinType = getInput("inputSkinType", "oily");
+    const troubles = $$('input[name="skinTrouble"]:checked').map(el => el.value);
+    const tone = getInput("inputColorTone", "all");
+
+    return {
+      price: priceScore(product, maxPrice),
+      ingredient: ingredientScore(product),
+      sentiment: sentimentScore(product),
+      match: matchScore(product, skinType, troubles, tone)
+    };
+  }
+
+  function activeWeights() {
+    const total = Object.values(state.weights)
+      .reduce((a, b) => a + Number(b || 0), 0) || 1;
+
+    return Object.fromEntries(
+      Object.entries(state.weights).map(([key, value]) => [key, value / total])
+    );
+  }
+
+  function rankProducts() {
+    const category = getInput("inputCategory", currentCategory);
+    const maxPrice = Number(getInput("inputPrice", 30000));
+    const cleanOnly = Boolean($("#filterCleanOnly")?.checked);
+    const weights = activeWeights();
+
+    const filtered = products.filter(product => {
+      if (category !== "all" && product.category !== category) return false;
+      if (Number(product.price || 0) > maxPrice) return false;
+
+      if (cleanOnly && (
+        Number(product.cautionIngredients || 0) > 0 ||
+        Number(product.allergyCaution || 0) > 0
+      )) return false;
+
+      return true;
+    });
+
+    return filtered.map(product => {
+      const f = getFeatures(product);
+
+      const distance = Math.sqrt(
+        weights.price * Math.pow(1 - f.price / 100, 2) +
+        weights.ingredient * Math.pow(1 - f.ingredient / 100, 2) +
+        weights.sentiment * Math.pow(1 - f.sentiment / 100, 2) +
+        weights.match * Math.pow(1 - f.match / 100, 2)
+      );
+
+      const score = Math.round((1 / (1 + distance)) * 100);
+
+      return { product, features: f, score, distance };
+    }).sort((a, b) => b.score - a.score);
+  }
+
+  function grade(score) {
+    if (score >= 93) return ["SS", "grade-ss"];
+    if (score >= 85) return ["S", "grade-s"];
+    if (score >= 70) return ["A", "grade-a"];
+    return ["B", "grade-b"];
+  }
+
+  function renderCategories() {
+    const host = $("#categoryTabs");
+    if (!host) return;
+
+    host.innerHTML = Object.values(categories).map(cat => `
+      <button class="category-tab ${cat.id === currentCategory ? "active" : ""}"
+        data-category="${safe(cat.id)}">
+        ${safe(cat.icon || "✨")} ${safe(cat.name)}
+      </button>
+    `).join("");
+
+    $$(".category-tab", host).forEach(button => {
+      button.addEventListener("click", () => {
+        currentCategory = button.dataset.category;
+
+        const select = $("#inputCategory");
+        if (select) select.value = currentCategory;
+
+        renderCategories();
+        renderAll();
+      });
+    });
+  }
+
+  function renderProducts(ranked) {
+    const grid = $("#productsGrid");
+    const count = $("#resultCountBadge");
+
+    if (count) count.textContent = `${ranked.length}개 추천`;
+    if (!grid) return;
+
+    if (!ranked.length) {
+      grid.innerHTML = `
+        <div class="empty-state"
+          style="grid-column:1/-1;padding:30px;text-align:center;background:#fff;border-radius:14px;">
+          조건에 맞는 제품이 없어요. 예산을 높이거나 필터를 조정해 보세요.
+        </div>`;
+      return;
+    }
+
+    grid.innerHTML = ranked.map(({product:p, features:f, score}) => {
+      const [g] = grade(score);
+      const unit = (Number(p.price || 0) /
+        Math.max(1, Number(p.capacity || 1))).toFixed(1);
+
+      const selected = selectedForCompare.includes(p.id);
+
+      return `
+      <article class="product-card"
+        style="background:#fff;border:1px solid #e2e8f0;border-radius:16px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,.04);">
+
+        <div style="position:relative;">
+          <img src="${safe(p.imageUrl || "")}" alt="${safe(p.name)}" loading="lazy"
+            style="width:100%;height:180px;object-fit:cover;background:#f8fafc;"
+            onerror="this.style.display='none'">
+
+          <span style="position:absolute;top:10px;left:10px;background:#fff;padding:4px 9px;border-radius:20px;font-size:12px;font-weight:800;">
+            ${g}등급
+          </span>
+        </div>
+
+        <div style="padding:15px;">
+          <div style="font-size:11px;color:#64748b;">
+            ${safe(p.brand || "")} · ${safe(p.categoryName || "")}
+          </div>
+
+          <h3 style="font-size:15px;line-height:1.45;margin:6px 0 8px;">
+            ${safe(p.name)}
+          </h3>
+
+          <div style="font-size:18px;font-weight:800;color:#be123c;">
+            ${money(p.price)}
+          </div>
+
+          <div style="font-size:11px;color:#64748b;margin:3px 0 10px;">
+            ${safe(p.capacity)}${safe(p.unit || "ml")} ·
+            1${safe(p.unit || "ml")}당 약 ${Number(unit).toLocaleString("ko-KR")}원
+          </div>
+
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:9px;background:#fff1f2;border-radius:9px;">
+            <strong style="color:#be123c;">AI 추천 점수 ${score}점</strong>
+            <strong>${Number(p.hwahaeRating ?? p.rating ?? 0).toFixed(1)} ★</strong>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:10px 0;font-size:11px;color:#475569;">
+            <span>가성비 ${f.price}점</span>
+            <span>성분 지표 ${f.ingredient}점</span>
+            <span>리뷰 분석 ${f.sentiment}점</span>
+            <span>피부 적합 ${f.match}점</span>
+          </div>
+
+          <div style="display:flex;gap:7px;">
+            <button class="btn btn-primary" data-detail="${safe(p.id)}" style="flex:1;">
+              상세 분석
+            </button>
+
+            <button class="btn" data-compare="${safe(p.id)}"
+              style="flex:1;background:${selected ? "#ffe4e6" : "#f1f5f9"};border:1px solid #e2e8f0;">
+              ${selected ? "비교 선택됨" : "비교 담기"}
+            </button>
+          </div>
+        </div>
+      </article>`;
+    }).join("");
+
+    $$("[data-detail]", grid).forEach(btn => {
+      btn.addEventListener("click", () =>
+        openProductDetailModal(btn.dataset.detail)
+      );
+    });
+
+    $$("[data-compare]", grid).forEach(btn => {
+      btn.addEventListener("click", () =>
+        toggleCompare(btn.dataset.compare)
+      );
+    });
+  }
+
+  function renderTopPick(ranked) {
+    const host = $("#topPickHighlight");
+    if (!host) return;
+
+    if (!ranked.length) {
+      host.innerHTML = "";
+      return;
+    }
+
+    const {product:p, score, features:f} = ranked[0];
+
+    host.innerHTML = `
+      <div style="background:linear-gradient(120deg,#fff1f2,#f5f3ff);border:1px solid #fecdd3;padding:18px;border-radius:16px;margin-bottom:18px;">
+        <div style="font-size:12px;font-weight:800;color:#be123c;">
+          🏆 현재 조건의 AI 1순위 추천
+        </div>
+
+        <div style="font-size:19px;font-weight:900;margin:5px 0;">
+          ${safe(p.name)}
+        </div>
+
+        <div style="font-size:13px;color:#475569;">
+          ${money(p.price)} · 추천 점수 ${score}점
+        </div>
+
+        <p style="font-size:12px;color:#475569;margin-top:8px;">
+          가성비 ${f.price}점 · 성분 지표 ${f.ingredient}점 ·
+          리뷰 ${f.sentiment}점 · 피부 적합도 ${f.match}점
+        </p>
+      </div>`;
+  }
+
+  function openProductDetailModal(id) {
+    const p = products.find(item => item.id === id);
+    if (!p) return;
+
+    const body = $("#modalContentBody");
+    if (!body) return;
+
+    const reviews = p.sampleReviews || [];
+    const ingredients = p.mainIngredients || [];
+    const score = lastRanked.find(item => item.product.id === id);
+
+    body.innerHTML = `
+      <div class="modal-product-header">
+        <div class="modal-product-header-top">
+          <img class="modal-thumb-img" src="${safe(p.imageUrl || "")}"
+            alt="${safe(p.name)}" onerror="this.style.display='none'">
+
+          <div class="modal-header-text">
+            <div class="modal-cat">
+              ${safe(p.brand || "")} · ${safe(p.categoryName || "")}
+            </div>
+
+            <h2>${safe(p.name)}</h2>
+            <strong style="color:#be123c;">${money(p.price)}</strong>
+
+            <div style="font-size:12px;color:#64748b;">
+              ${safe(p.capacity)}${safe(p.unit || "ml")} ·
+              평점 ${Number(p.hwahaeRating ?? p.rating ?? 0).toFixed(2)}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h3 style="margin:14px 0 8px;">🧪 주요 성분 정보</h3>
+
+      <div class="ing-tags">
+        ${ingredients.length ? ingredients.map(name => {
+          const info = ingredientDict[name];
+          return `<span class="ing-tag">${safe(name)}${info ? ` · ${safe(info.safety)}` : ""}</span>`;
+        }).join("") : "등록된 주요 성분 정보가 없습니다."}
+      </div>
+
+      <p style="font-size:12px;color:#64748b;margin-top:8px;">
+        성분 정보는 데이터셋에 입력된 항목을 요약한 것으로,
+        개인별 알레르기나 피부 반응을 보장하거나 진단하지 않습니다.
+      </p>
+
+      <h3 style="margin:18px 0 8px;">💬 등록된 리뷰 예시</h3>
+
+      <div class="modal-reviews-list">
+        ${reviews.length ? reviews.map(review =>
+          `<div class="review-bubble">${safe(review)}</div>`
+        ).join("") : "등록된 리뷰가 없습니다."}
+      </div>
+
+      <div style="margin-top:16px;padding:12px;background:#f8fafc;border-radius:10px;font-size:12px;">
+        <strong>AI 분석 요약</strong><br>
+        ${score
+          ? `추천 점수 ${score.score}점 · 가성비 ${score.features.price}점 · 성분 지표 ${score.features.ingredient}점 · 리뷰 ${score.features.sentiment}점 · 피부 적합도 ${score.features.match}점`
+          : "현재 추천 목록을 새로 계산하면 점수가 표시됩니다."}
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-primary" onclick="closeProductDetailModal()">닫기</button>
+      </div>`;
+
+    $("#productDetailModal")?.classList.add("active");
+  }
+
+  function closeProductDetailModal() {
+    $("#productDetailModal")?.classList.remove("active");
+  }
+
+  function toggleCompare(id) {
+    if (selectedForCompare.includes(id)) {
+      selectedForCompare = selectedForCompare.filter(item => item !== id);
+    } else {
+      if (selectedForCompare.length >= 4) {
+        alert("비교 제품은 최대 4개까지 선택할 수 있어요.");
+        return;
+      }
+
+      selectedForCompare.push(id);
+    }
+
+    renderCompareBar();
+    renderProducts(lastRanked);
+  }
+
+  function renderCompareBar() {
+    const bar = $("#floatingCompareBar");
+    const count = $("#compareCount");
+    const chips = $("#compareSelectedChips");
+
+    if (count) count.textContent = selectedForCompare.length;
+
+    if (chips) {
+      chips.innerHTML = selectedForCompare.map(id => {
+        const p = products.find(item => item.id === id);
+
+        return p
+          ? `<span style="display:inline-block;background:#fff;border:1px solid #fecdd3;border-radius:20px;padding:4px 8px;margin:2px;font-size:11px;">${safe(p.name)}</span>`
+          : "";
+      }).join("");
+    }
+
+    if (bar) {
+      bar.style.display = selectedForCompare.length ? "flex" : "none";
+    }
+  }
+
+  function clearAllComparison() {
+    selectedForCompare = [];
+    renderCompareBar();
+    renderProducts(lastRanked);
+  }
+
+  function openComparisonModal() {
+    const chosen = selectedForCompare
+      .map(id => products.find(p => p.id === id))
+      .filter(Boolean);
+
+    if (chosen.length < 2) {
+      alert("비교하려면 제품을 2개 이상 선택해 주세요.");
+      return;
+    }
+
+    const host = $("#comparatorContainer");
+    if (!host) return;
+
+    host.innerHTML = `
+      <div style="background:#fff;border-radius:16px;padding:18px;overflow-x:auto;">
+        <h2 style="margin-bottom:14px;">📊 선택 제품 비교 결과</h2>
+
+        <table style="width:100%;border-collapse:collapse;min-width:520px;font-size:13px;">
+          <thead>
+            <tr>
+              <th style="text-align:left;padding:10px;border-bottom:1px solid #e2e8f0;">
+                비교 항목
+              </th>
+
+              ${chosen.map(p =>
+                `<th style="padding:10px;border-bottom:1px solid #e2e8f0;">${safe(p.name)}</th>`
+              ).join("")}
+            </tr>
+          </thead>
+
+          <tbody>
+            ${[
+              ["가격", p => money(p.price)],
+              ["용량", p => `${safe(p.capacity)}${safe(p.unit || "ml")}`],
+              ["용량당 가격", p => `${(Number(p.price || 0) / Math.max(1, Number(p.capacity || 1))).toFixed(1)}원`],
+              ["평점", p => `${Number(p.hwahaeRating ?? p.rating ?? 0).toFixed(2)} / 5`],
+              ["리뷰 수", p => Number(p.reviewCount || 0).toLocaleString("ko-KR")],
+              ["주의 성분 수", p => Number(p.cautionIngredients || 0)],
+              ["주요 성분", p => (p.mainIngredients || []).join(", ") || "정보 없음"]
+            ].map(([label, fn]) => `
+              <tr>
+                <th style="text-align:left;padding:10px;border-bottom:1px solid #e2e8f0;">
+                  ${label}
+                </th>
+
+                ${chosen.map(p =>
+                  `<td style="padding:10px;border-bottom:1px solid #e2e8f0;">${fn(p)}</td>`
+                ).join("")}
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+
+        <p style="font-size:11px;color:#64748b;margin-top:12px;">
+          표시된 정보는 현재 페이지에 포함된 데이터셋 기준입니다.
+        </p>
+      </div>`;
+
+    switchTab("comparator");
+  }
+
+  function switchTab(tab) {
+    $$(".nav-tab-btn").forEach(btn =>
+      btn.classList.toggle("active", btn.dataset.tab === tab)
+    );
+
+    $$(".tab-content-panel").forEach(panel =>
+      panel.classList.toggle("active", panel.id === `panel-${tab}`)
+    );
+
+    if (tab === "ailab") renderLab();
+  }
+
+  function renderLab() {
+    const slider = $("#labKSlider");
+
+    if (slider) {
+      slider.value = state.k;
+
+      if ($("#labKDisplay")) {
+        $("#labKDisplay").textContent = state.k;
+      }
+    }
+
+    const pairs = [
+      ["price", "weightPrice", "wPriceVal"],
+      ["ingredient", "weightIng", "wIngVal"],
+      ["sentiment", "weightSent", "wSentVal"],
+      ["match", "weightMatch", "wMatchVal"]
+    ];
+
+    pairs.forEach(([key, inputId, labelId]) => {
+      const input = document.getElementById(inputId);
+      const label = document.getElementById(labelId);
+
+      if (input) input.value = Math.round(state.weights[key] * 100);
+      if (label) label.textContent = `${Math.round(state.weights[key] * 100)}%`;
+    });
+
+    const host = $("#labNeighborsList");
+
+    if (host) {
+      const nearest = lastRanked.slice(0, state.k);
+
+      host.innerHTML = nearest.length
+        ? nearest.map((item, index) => `
+          <div style="padding:10px;border:1px solid #e2e8f0;border-radius:9px;margin:7px 0;background:#fff;">
+            <strong>${index + 1}. ${safe(item.product.name)}</strong>
+
+            <span style="float:right;color:#be123c;font-weight:800;">
+              ${item.score}점
+            </span>
+
+            <div style="font-size:11px;color:#64748b;">
+              거리 ${item.distance.toFixed(3)} · ${money(item.product.price)}
+            </div>
+          </div>
+        `).join("")
+        : "추천 결과가 없습니다.";
+    }
+  }
+
+  function renderAll() {
+    lastRanked = rankProducts();
+    renderTopPick(lastRanked);
+    renderProducts(lastRanked);
+    renderLab();
+  }
+
+  function bindEvents() {
+    ["inputCategory", "inputPrice", "filterCleanOnly", "inputSkinType", "inputColorTone"]
+      .forEach(id => {
+        document.getElementById(id)?.addEventListener("input", () => {
+          if (id === "inputCategory") {
+            currentCategory = getInput("inputCategory", "all");
+            renderCategories();
+          }
+
+          if (id === "inputPrice") {
+            const display = $("#priceDisplay");
+
+            if (display) {
+              display.textContent = `최대 ${money(getInput("inputPrice"))} 이하`;
+            }
+          }
+
+          renderAll();
+        });
+
+        document.getElementById(id)?.addEventListener("change", renderAll);
+      });
+
+    $$('input[name="skinTrouble"]').forEach(el =>
+      el.addEventListener("change", renderAll)
+    );
+
+    $$(".nav-tab-btn").forEach(btn =>
+      btn.addEventListener("click", () => switchTab(btn.dataset.tab))
+    );
+
+    $("#labKSlider")?.addEventListener("input", event => {
+      state.k = Number(event.target.value);
+      renderLab();
+    });
+
+    [
+      ["weightPrice", "price", "wPriceVal"],
+      ["weightIng", "ingredient", "wIngVal"],
+      ["weightSent", "sentiment", "wSentVal"],
+      ["weightMatch", "match", "wMatchVal"]
+    ].forEach(([inputId, key, labelId]) => {
+      document.getElementById(inputId)?.addEventListener("input", event => {
+        state.weights[key] = Number(event.target.value) / 100;
+
+        const label = document.getElementById(labelId);
+
+        if (label) {
+          label.textContent = `${event.target.value}%`;
+        }
+
+        renderAll();
+      });
+    });
+  }
+
+  window.openProductDetailModal = openProductDetailModal;
+  window.closeProductDetailModal = closeProductDetailModal;
+  window.clearAllComparison = clearAllComparison;
+  window.openComparisonModal = openComparisonModal;
+  window.printReport = () => window.print();
+
+  document.addEventListener("DOMContentLoaded", () => {
+    if (!products.length) {
+      const count = $("#resultCountBadge");
+
+      if (count) {
+        count.textContent = "데이터를 불러오지 못했어요";
+      }
+
+      const grid = $("#productsGrid");
+
+      if (grid) {
+        grid.innerHTML = `
+          <p style="padding:20px;">
+            제품 데이터가 없습니다. index.html 안의 COSMETICS_DATASET 선언을 확인해 주세요.
+          </p>`;
+      }
+
+      return;
+    }
+
+    renderCategories();
+    bindEvents();
+    renderCompareBar();
+    renderAll();
+  });
+})();
 </body>
 </html>
 
