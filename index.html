@@ -193,119 +193,194 @@
       { id: 8, brand: "세범컷(예시)", name: "노세범 미네랄 블러 팩트 8g", cat: "베이스", price: 6000, vol: 8, unit: "g", rate: 4.8, trend: 96, skins: ["지성","복합성"], concerns: ["피지","트러블"], ing: ["실리카","녹차추출물"], caution: "건성 피부 과다 사용 주의", pc: ["무관"], posRate: 95, good: "6천 원으로 오후 유분기랑 앞머리 떡짐을 한 번에 잡아주는 필수템이에요.", bad: "내장 퍼프 대신 브러시를 쓰면 더 얇게 발려요." },
       { id: 9, brand: "모찌커버(예시)", name: "세미매트 학생 데일리 쿠션 15g", cat: "베이스", price: 14900, vol: 15, unit: "g", rate: 4.5, trend: 87, skins: ["지성","복합성"], concerns: ["잡티","피지"], ing: ["나이아신아마이드","병풀잎추출물"], caution: "향료 포함", pc: ["봄웜","여름쿨"], posRate: 86, good: "1만 원대 중반인데 잡티 커버력이 좋고 얇게 밀착돼요.", bad: "리필 미포함 단품이라 용량 대비 빨리 쓰는 편이에요." },
       { id: 10, brand: "판테놀원(예시)", name: "판테놀 5% 장벽 보습 토너 250ml", cat: "스킨/토너", price: 11000, vol: 250, unit: "ml", rate: 4.7, trend: 86, skins: ["건성","민감성","복합성"], concerns: ["수분부족","붉은기"], ing: ["판테놀","세라마이드NP"], caution: "무알코올·무향료", pc: ["무관"], posRate: 92, good: "환절기 속당김을 잡아주고 민감한 날에도 따갑지 않아요.", bad: "약간 점성이 있어 닦토보다는 손으로 흡수시키는 게 좋아요." }
-    ];let pickedIds = [];
+    ];// 비교함 선택 ID 저장 배열
+    var pickedIds = [];
 
+    // 단위 가격 계산 함수
     function unitPriceLabel(p) {
       if (p.unit === "g" && p.vol <= 20) {
-        return `1g당 ${Math.round(p.price / p.vol).toLocaleString()}원 (${p.vol}g)`;
+        var per1g = Math.round(p.price / p.vol);
+        return "1g당 " + per1g.toLocaleString() + "원 (" + p.vol + "g)";
       }
-      return `10${p.unit}당 ${Math.round((p.price / p.vol) * 10).toLocaleString()}원 (${p.vol}${p.unit})`;
+      var per10 = Math.round((p.price / p.vol) * 10);
+      return "10" + p.unit + "당 " + per10.toLocaleString() + "원 (" + p.vol + p.unit + ")";
     }
 
+    // 핵심 추천 계산 및 카드 렌더링 함수
     function renderAll() {
-      const budget = Number(document.getElementById("budgetInput").value);
-      const skin = document.querySelector("#skinChips .chip.on").getAttribute("data-val");
-      const concerns = Array.from(document.querySelectorAll("#concernChips .chip.on")).map(el => el.getAttribute("data-val"));
-      const cat = document.getElementById("catSelect").value;
-      const tier = document.getElementById("tierSelect").value;
-      const pc = document.getElementById("pcSelect").value;
+      try {
+        var budgetEl = document.getElementById("budgetInput");
+        var budget = budgetEl ? Number(budgetEl.value) : 15000;
 
-      let list = DB.filter(item => {
-        if (cat !== "전체" && item.cat !== cat) return false;
-        if (tier === "u10" && item.price > 10000) return false;
-        if (tier === "10to20" && (item.price < 10000 || item.price > 20000)) return false;
-        return true;
-      });
+        var activeSkin = document.querySelector("#skinChips .chip.on");
+        var skin = activeSkin ? activeSkin.getAttribute("data-val") : "지성";
 
-      let extraNote = "";
-      if (list.length === 0) {
-        list = DB.slice();
-        extraNote = " (선택한 가격대 조건 제품이 없어 전체 목록에서 분석했습니다)";
+        var activeConcerns = document.querySelectorAll("#concernChips .chip.on");
+        var concerns = [];
+        for (var i = 0; i < activeConcerns.length; i++) {
+          concerns.push(activeConcerns[i].getAttribute("data-val"));
+        }
+        if (concerns.length === 0) concerns.push("트러블");
+
+        var cat = document.getElementById("catSelect").value;
+        var tier = document.getElementById("tierSelect").value;
+        var pc = document.getElementById("pcSelect").value;
+
+        // 1. 조건 필터링
+        var list = [];
+        for (var j = 0; j < DB.length; j++) {
+          var item = DB[j];
+          if (cat !== "전체" && item.cat !== cat) continue;
+          if (tier === "u10" && item.price > 10000) continue;
+          if (tier === "10to20" && (item.price < 10000 || item.price > 20000)) continue;
+          list.push(item);
+        }
+
+        var extraNote = "";
+        if (list.length === 0) {
+          list = DB.slice();
+          extraNote = " (선택한 가격대 조건 제품이 없어 전체 인기 제품으로 확장 분석했습니다)";
+        }
+
+        // 2. AI 종합 점수 계산
+        var scored = [];
+        for (var k = 0; k < list.length; k++) {
+          var p = list[k];
+          var pts = 0;
+          var why = [];
+          var inBudget = p.price <= budget;
+
+          // 예산 및 가성비 점수
+          if (inBudget) {
+            pts += 26 + Math.round(((budget - p.price) / budget) * 9);
+            why.push("설정 예산(" + budget.toLocaleString() + "원) 이내로 용돈 가성비가 뛰어납니다.");
+          } else {
+            var diff = p.price - budget;
+            pts += Math.max(5, 16 - Math.floor(diff / 1000) * 3);
+            why.push("예산보다 " + diff.toLocaleString() + "원 높지만 평점과 성분 만족도가 높습니다.");
+          }
+
+          // 피부 유형 및 고민 적합도
+          if (p.skins.indexOf(skin) !== -1) {
+            pts += 15;
+          }
+
+          var hit = [];
+          for (var cIdx = 0; cIdx < p.concerns.length; cIdx++) {
+            if (concerns.indexOf(p.concerns[cIdx]) !== -1) {
+              hit.push(p.concerns[cIdx]);
+            }
+          }
+
+          if (hit.length > 0) {
+            pts += Math.min(15, hit.length * 8);
+            why.push(skin + " 피부와 '" + hit.join(", ") + "' 고민 케어에 어울리는 " + p.ing[0] + " 성분이 들어있습니다.");
+          } else {
+            why.push(skin + " 피부에 부담 없이 사용하기 좋은 성분 구성입니다.");
+          }
+
+          // 평점 및 긍정 리뷰 비율
+          pts += Math.round((p.rate / 5) * 10 + (p.posRate / 100) * 10);
+
+          // 10대 트렌드 점수
+          pts += Math.round((p.trend / 100) * 10);
+
+          // 퍼스널컬러 (부가 요소)
+          if (pc !== "무관" && p.pc.indexOf(pc) !== -1) {
+            pts += 5;
+            why.push("부가 선택하신 " + pc + " 톤과도 잘 어우러집니다.");
+          }
+
+          scored.push({
+            id: p.id,
+            brand: p.brand,
+            name: p.name,
+            cat: p.cat,
+            price: p.price,
+            vol: p.vol,
+            unit: p.unit,
+            rate: p.rate,
+            trend: p.trend,
+            ing: p.ing,
+            caution: p.caution,
+            posRate: p.posRate,
+            good: p.good,
+            bad: p.bad,
+            finalScore: Math.min(99, pts),
+            inBudget: inBudget,
+            whyText: why.join(" ")
+          });
+        }
+
+        // 3. 점수 높은 순 정렬
+        scored.sort(function (a, b) {
+          return b.finalScore - a.finalScore;
+        });
+
+        // 4. 상태 텍스트 업데이트
+        var statusEl = document.getElementById("statusText");
+        if (statusEl) {
+          statusEl.textContent =
+            "예산 " + budget.toLocaleString() + "원 · " + skin + " · " + concerns.join("/") +
+            " 분석 결과 (" + scored.length + "개)" + extraNote;
+        }
+
+        // 5. 카드 HTML 조립 및 출력
+        var htmlArr = [];
+        for (var m = 0; m < scored.length; m++) {
+          var itemObj = scored[m];
+          var isPicked = pickedIds.indexOf(itemObj.id) !== -1;
+          var budgetBadgeClass = itemObj.inBudget ? "pill-ok" : "pill-over";
+          var budgetBadgeText = itemObj.inBudget ? "✔ 예산 내 구매 가능" : "⚠ 예산 초과";
+          var btnClass = isPicked ? "cmp-btn picked" : "cmp-btn";
+          var btnText = isPicked ? "✓ 비교함 담김" : "+ 비교함에 담기";
+
+          htmlArr.push(
+            '<div class="item-card">' +
+              '<div>' +
+                '<div class="badges">' +
+                  '<span class="b-rank">🏆 추천 ' + (m + 1) + '위</span>' +
+                  '<span class="b-score">AI 적합도 ' + itemObj.finalScore + '점</span>' +
+                '</div>' +
+                '<div class="meta">' + itemObj.brand + ' · ' + itemObj.cat + ' · ⭐ ' + itemObj.rate + ' (긍정후기 ' + itemObj.posRate + '%)</div>' +
+                '<div class="title">' + itemObj.name + '</div>' +
+                '<div class="price-line">' +
+                  '<span class="price">' + itemObj.price.toLocaleString() + '원</span>' +
+                  '<span class="unit-price">' + unitPriceLabel(itemObj) + '</span>' +
+                '</div>' +
+                '<div class="pill-row">' +
+                  '<span class="' + budgetBadgeClass + '">' + budgetBadgeText + '</span>' +
+                  '<span class="pill-pop">🔥 트렌드 ' + itemObj.trend + '점</span>' +
+                '</div>' +
+                '<div class="reason">' +
+                  '<b>🤖 AI 추천 이유</b>' +
+                  itemObj.whyText +
+                '</div>' +
+                '<div class="detail-list">' +
+                  '<div style="color:#15803d;"><b>👍 장점:</b> ' + itemObj.good + '</div>' +
+                  '<div style="color:#b45309;"><b>⚠️ 주의점:</b> ' + itemObj.bad + ' (성분참고: ' + itemObj.caution + ')</div>' +
+                '</div>' +
+              '</div>' +
+              '<div>' +
+                '<div class="ing-box"><b>핵심 성분:</b> ' + itemObj.ing.join(", ") + '</div>' +
+                '<button type="button" class="' + btnClass + '" onclick="togglePick(' + itemObj.id + ')">' + btnText + '</button>' +
+              '</div>' +
+            '</div>'
+          );
+        }
+
+        var cardList = document.getElementById("cardList");
+        if (cardList) {
+          cardList.innerHTML = htmlArr.join("");
+        }
+      } catch (err) {
+        alert("실행 중 오류가 발생했습니다: " + err.message);
       }
-
-      const scored = list.map(item => {
-        let pts = 0;
-        const why = [];
-        const inBudget = item.price <= budget;
-
-        if (inBudget) {
-          pts += 26 + Math.round(((budget - item.price) / budget) * 9);
-          why.push(`예산(${budget.toLocaleString()}원) 이내로 가성비가 뛰어납니다.`);
-        } else {
-          pts += Math.max(5, 16 - Math.floor((item.price - budget) / 1000) * 3);
-          why.push(`예산보다 ${(item.price - budget).toLocaleString()}원 높지만 평점과 성분 만족도가 높습니다.`);
-        }
-
-        if (item.skins.includes(skin)) pts += 15;
-        const hit = item.concerns.filter(c => concerns.includes(c));
-        if (hit.length > 0) {
-          pts += Math.min(15, hit.length * 8);
-          why.push(`${skin} 피부와 '${hit.join(", ")}' 고민 케어에 맞는 ${item.ing[0]} 성분이 들어있습니다.`);
-        } else {
-          why.push(`${skin} 피부에 무난하게 쓰기 좋은 성분 구성입니다.`);
-        }
-
-        pts += Math.round((item.rate / 5) * 10 + (item.posRate / 100) * 10);
-        pts += Math.round((item.trend / 100) * 10);
-
-        if (pc !== "무관" && item.pc.includes(pc)) {
-          pts += 5;
-          why.push(`부가 선택하신 ${pc} 톤과도 잘 어울립니다.`);
-        }
-
-        return {
-          ...item,
-          finalScore: Math.min(99, pts),
-          inBudget,
-          whyText: why.join(" ")
-        };
-      }).sort((a, b) => b.finalScore - a.finalScore);
-
-      document.getElementById("statusText").textContent =
-        `예산 ${budget.toLocaleString()}원 · ${skin} · ${concerns.join("/")} 분석 결과 (${scored.length}개)${extraNote}`;
-
-      const cardList = document.getElementById("cardList");
-      cardList.innerHTML = scored.map((item, i) => {
-        const isPicked = pickedIds.includes(item.id);
-        return `
-          <div class="item-card">
-            <div>
-              <div class="badges">
-                <span class="b-rank">🏆 추천 ${i + 1}위</span>
-                <span class="b-score">AI 적합도 ${item.finalScore}점</span>
-              </div>
-              <div class="meta">${item.brand} · ${item.cat} · ⭐ ${item.rate} (긍정후기 ${item.posRate}%)</div>
-              <div class="title">${item.name}</div>
-              <div class="price-line">
-                <span class="price">${item.price.toLocaleString()}원</span>
-                <span class="unit-price">${unitPriceLabel(item)}</span>
-              </div>
-              <div class="pill-row">
-                <span class="${item.inBudget ? "pill-ok" : "pill-over"}">${item.inBudget ? "✔ 예산 내 구매 가능" : "⚠ 예산 초과"}</span>
-                <span class="pill-pop">🔥 트렌드 ${item.trend}점</span>
-              </div>
-              <div class="reason">
-                <b>🤖 AI 추천 이유</b>
-                ${item.whyText}
-              </div>
-              <div class="detail-list">
-                <div style="color:#15803d;"><b>👍 장점:</b> ${item.good}</div>
-                <div style="color:#b45309;"><b>⚠️ 주의점:</b> ${item.bad} (성분참고: ${item.caution})</div>
-              </div>
-            </div>
-            <div>
-              <div class="ing-box"><b>핵심 성분:</b> ${item.ing.join(", ")}</div>
-              <button type="button" class="cmp-btn ${isPicked ? "picked" : ""}" onclick="togglePick(${item.id})">
-                ${isPicked ? "✓ 비교함 담김" : "+ 비교함에 담기"}
-              </button>
-            </div>
-          </div>
-        `;
-      }).join("");
     }
 
-    window.togglePick = function(id) {
-      const idx = pickedIds.indexOf(id);
+    // 비교함 담기/해제
+    window.togglePick = function (id) {
+      var idx = pickedIds.indexOf(id);
       if (idx > -1) {
         pickedIds.splice(idx, 1);
       } else {
@@ -320,66 +395,115 @@
     };
 
     function updateBar() {
-      const bar = document.getElementById("floatBar");
+      var bar = document.getElementById("floatBar");
+      if (!bar) return;
       if (pickedIds.length === 0) {
         bar.classList.remove("show");
       } else {
         bar.classList.add("show");
-        document.getElementById("floatMsg").textContent = `선택된 제품 ${pickedIds.length}개 (최대 3개 비교 가능)`;
+        document.getElementById("floatMsg").textContent = "선택된 제품 " + pickedIds.length + "개 (최대 3개 비교 가능)";
       }
     }
 
-    document.getElementById("budgetInput").addEventListener("input", function() {
-      document.getElementById("budgetLabel").textContent = Number(this.value).toLocaleString() + "원";
-    });
-
-    document.getElementById("skinChips").addEventListener("click", function(e) {
-      if (!e.target.classList.contains("chip")) return;
-      this.querySelectorAll(".chip").forEach(c => c.classList.remove("on"));
-      e.target.classList.add("on");
-    });
-
-    document.getElementById("concernChips").addEventListener("click", function(e) {
-      if (!e.target.classList.contains("chip")) return;
-      if (e.target.classList.contains("on") && this.querySelectorAll(".chip.on").length === 1) return;
-      e.target.classList.toggle("on");
-    });
-
-    document.getElementById("calcBtn").addEventListener("click", renderAll);
-
-    document.getElementById("resetCmpBtn").addEventListener("click", function() {
-      pickedIds = [];
-      updateBar();
-      renderAll();
-    });
-
-    document.getElementById("showCmpBtn").addEventListener("click", function() {
-      if (pickedIds.length < 2) {
-        alert("비교할 제품을 2개 이상 담아주세요!");
-        return;
+    // 이벤트 연결 초기화 함수
+    function initEvents() {
+      var budgetInput = document.getElementById("budgetInput");
+      if (budgetInput) {
+        budgetInput.addEventListener("input", function () {
+          document.getElementById("budgetLabel").textContent = Number(this.value).toLocaleString() + "원";
+        });
       }
-      const items = pickedIds.map(id => DB.find(x => x.id === id));
-      const minPrice = Math.min(...items.map(x => x.price));
-      let html = `<div style="overflow-x:auto;"><table><tr><th>항목</th>` +
-        items.map(x => `<td><b>${x.name}</b><br><small>${x.brand}</small></td>`).join("") + `</tr>`;
-      html += `<tr><th>가격</th>` + items.map(x => `<td><b style="color:#db2777;">${x.price.toLocaleString()}원</b> ${x.price === minPrice ? '<span class="pill-ok">최저가</span>' : ''}</td>`).join("") + `</tr>`;
-      html += `<tr><th>용량/단가</th>` + items.map(x => `<td>${unitPriceLabel(x)}</td>`).join("") + `</tr>`;
-      html += `<tr><th>평점/긍정률</th>` + items.map(x => `<td>⭐ ${x.rate} (${x.posRate}%)</td>`).join("") + `</tr>`;
-      html += `<tr><th>추천피부</th>` + items.map(x => `<td>${x.skins.join(", ")}</td>`).join("") + `</tr>`;
-      html += `<tr><th>핵심성분</th>` + items.map(x => `<td>${x.ing.join(", ")}</td>`).join("") + `</tr>`;
-      html += `<tr><th>주의성분</th>` + items.map(x => `<td>${x.caution}</td>`).join("") + `</tr>`;
-      html += `<tr><th>장점요약</th>` + items.map(x => `<td>${x.good}</td>`).join("") + `</tr>`;
-      html += `<tr><th>아쉬운점</th>` + items.map(x => `<td>${x.bad}</td>`).join("") + `</tr></table></div>`;
-      document.getElementById("cmpTableWrap").innerHTML = html;
-      document.getElementById("cmpModal").classList.add("show");
-    });
 
-    document.getElementById("hideCmpBtn").addEventListener("click", function() {
-      document.getElementById("cmpModal").classList.remove("show");
-    });
+      var skinChips = document.getElementById("skinChips");
+      if (skinChips) {
+        skinChips.addEventListener("click", function (e) {
+          if (!e.target.classList.contains("chip")) return;
+          var all = skinChips.querySelectorAll(".chip");
+          for (var i = 0; i < all.length; i++) all[i].classList.remove("on");
+          e.target.classList.add("on");
+        });
+      }
 
-    // 스크립트 로드 즉시 초기 추천 목록 출력
-    renderAll();
+      var concernChips = document.getElementById("concernChips");
+      if (concernChips) {
+        concernChips.addEventListener("click", function (e) {
+          if (!e.target.classList.contains("chip")) return;
+          var activeCount = concernChips.querySelectorAll(".chip.on").length;
+          if (e.target.classList.contains("on") && activeCount === 1) return;
+          e.target.classList.toggle("on");
+        });
+      }
+
+      var calcBtn = document.getElementById("calcBtn");
+      if (calcBtn) {
+        calcBtn.addEventListener("click", function () {
+          renderAll();
+          var resEl = document.getElementById("statusText");
+          if (resEl) {
+            resEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
+          }
+        });
+      }
+
+      var resetCmpBtn = document.getElementById("resetCmpBtn");
+      if (resetCmpBtn) {
+        resetCmpBtn.addEventListener("click", function () {
+          pickedIds = [];
+          updateBar();
+          renderAll();
+        });
+      }
+
+      var showCmpBtn = document.getElementById("showCmpBtn");
+      if (showCmpBtn) {
+        showCmpBtn.addEventListener("click", function () {
+          if (pickedIds.length < 2) {
+            alert("비교할 제품을 2개 이상 담아주세요!");
+            return;
+          }
+          var items = [];
+          for (var i = 0; i < pickedIds.length; i++) {
+            for (var j = 0; j < DB.length; j++) {
+              if (DB[j].id === pickedIds[i]) items.push(DB[j]);
+            }
+          }
+          var minPrice = Math.min.apply(null, items.map(function (x) { return x.price; }));
+
+          var html = '<div style="overflow-x:auto;"><table><tr><th>항목</th>' +
+            items.map(function (x) { return '<td><b>' + x.name + '</b><br><small>' + x.brand + '</small></td>'; }).join("") + '</tr>';
+          html += '<tr><th>가격</th>' + items.map(function (x) {
+            return '<td><b style="color:#db2777;">' + x.price.toLocaleString() + '원</b> ' +
+              (x.price === minPrice ? '<span class="pill-ok">최저가</span>' : '') + '</td>';
+          }).join("") + '</tr>';
+          html += '<tr><th>용량/단가</th>' + items.map(function (x) { return '<td>' + unitPriceLabel(x) + '</td>'; }).join("") + '</tr>';
+          html += '<tr><th>평점/긍정률</th>' + items.map(function (x) { return '<td>⭐ ' + x.rate + ' (' + x.posRate + '%)</td>'; }).join("") + '</tr>';
+          html += '<tr><th>추천피부</th>' + items.map(function (x) { return '<td>' + x.skins.join(", ") + '</td>'; }).join("") + '</tr>';
+          html += '<tr><th>핵심성분</th>' + items.map(function (x) { return '<td>' + x.ing.join(", ") + '</td>'; }).join("") + '</tr>';
+          html += '<tr><th>주의성분</th>' + items.map(function (x) { return '<td>' + x.caution + '</td>'; }).join("") + '</tr>';
+          html += '<tr><th>장점요약</th>' + items.map(function (x) { return '<td>' + x.good + '</td>'; }).join("") + '</tr>';
+          html += '<tr><th>아쉬운점</th>' + items.map(function (x) { return '<td>' + x.bad + '</td>'; }).join("") + '</tr></table></div>';
+
+          document.getElementById("cmpTableWrap").innerHTML = html;
+          document.getElementById("cmpModal").classList.add("show");
+        });
+      }
+
+      var hideCmpBtn = document.getElementById("hideCmpBtn");
+      if (hideCmpBtn) {
+        hideCmpBtn.addEventListener("click", function () {
+          document.getElementById("cmpModal").classList.remove("show");
+        });
+      }
+
+      // 초기 실행
+      renderAll();
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", initEvents);
+    } else {
+      initEvents();
+    }
   </script>
 </body>
 </html>
