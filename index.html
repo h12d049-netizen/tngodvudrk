@@ -3,1194 +3,383 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>틴코스 AI (TeenCos AI) - 10대 맞춤형 가성비 화장품 추천</title>
+  <title>틴코스 AI (TeenCos AI) - 10대 맞춤 가성비 화장품 추천</title>
   <style>
-    :root {
-      --pink-50: #fdf2f8;
-      --pink-100: #fce7f3;
-      --pink-200: #fbcfe8;
-      --pink-500: #ec4899;
-      --pink-600: #db2777;
-      --purple-50: #f5f3ff;
-      --purple-100: #ede9fe;
-      --purple-500: #8b5cf6;
-      --purple-600: #7c3aed;
-      --purple-700: #6d28d9;
-      --gray-50: #f9fafb;
-      --gray-100: #f3f4f6;
-      --gray-200: #e5e7eb;
-      --gray-500: #6b7280;
-      --gray-700: #374151;
-      --gray-900: #111827;
-      --green-100: #dcfce7;
-      --green-700: #15803d;
-      --amber-100: #fef3c7;
-      --amber-700: #b45309;
-      --red-100: #fee2e2;
-      --red-700: #b91c1c;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
-    }
-
-    body {
-      background: linear-gradient(135deg, var(--pink-50) 0%, var(--purple-50) 100%);
-      color: var(--gray-900);
-      min-height: 100vh;
-      line-height: 1.5;
-      padding-bottom: 90px;
-    }
-
-    header {
-      background: rgba(255, 255, 255, 0.92);
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid var(--pink-200);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-
-    .header-inner {
-      max-width: 1120px;
-      margin: 0 auto;
-      padding: 14px 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-weight: 800;
-      font-size: 1.3rem;
-      background: linear-gradient(90deg, var(--pink-600), var(--purple-600));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .logo-badge {
-      font-size: 0.72rem;
-      font-weight: 700;
-      padding: 3px 8px;
-      border-radius: 999px;
-      background: var(--purple-100);
-      color: var(--purple-700);
-      -webkit-text-fill-color: var(--purple-700);
-    }
-
-    .sample-notice-top {
-      font-size: 0.78rem;
-      color: var(--gray-500);
-      background: var(--gray-100);
-      padding: 5px 10px;
-      border-radius: 8px;
-    }
-
-    .container {
-      max-width: 1120px;
-      margin: 0 auto;
-      padding: 24px 20px;
-    }
-
-    .hero {
-      background: linear-gradient(120deg, #fbcfe8 0%, #ddd6fe 100%);
-      border-radius: 22px;
-      padding: 28px 24px;
-      margin-bottom: 24px;
-      box-shadow: 0 10px 25px rgba(139, 92, 246, 0.1);
-    }
-
-    .hero h1 {
-      font-size: 1.65rem;
-      font-weight: 800;
-      color: var(--gray-900);
-      margin-bottom: 8px;
-    }
-
-    .hero p {
-      font-size: 0.95rem;
-      color: var(--gray-700);
-    }
-
-    .card {
-      background: #ffffff;
-      border-radius: 20px;
-      padding: 24px;
-      box-shadow: 0 6px 20px rgba(236, 72, 153, 0.06);
-      border: 1px solid var(--pink-100);
-      margin-bottom: 24px;
-    }
-
-    .section-title {
-      font-size: 1.15rem;
-      font-weight: 800;
-      color: var(--purple-700);
-      margin-bottom: 18px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .form-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 20px;
-    }
-
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .form-label {
-      font-weight: 700;
-      font-size: 0.92rem;
-      color: var(--gray-700);
-    }
-
-    .form-sub {
-      font-size: 0.78rem;
-      color: var(--gray-500);
-    }
-
-    .budget-box {
-      background: var(--pink-50);
-      border: 1px solid var(--pink-200);
-      border-radius: 14px;
-      padding: 14px;
-    }
-
-    .budget-display {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-    }
-
-    .budget-value {
-      font-size: 1.25rem;
-      font-weight: 800;
-      color: var(--pink-600);
-    }
-
-    input[type="range"] {
-      width: 100%;
-      accent-color: var(--pink-500);
-      cursor: pointer;
-    }
-
-    .chip-group {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .chip {
-      padding: 8px 14px;
-      border-radius: 999px;
-      border: 1.5px solid var(--gray-200);
-      background: #fff;
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: var(--gray-700);
-      cursor: pointer;
-      transition: all 0.15s ease;
-      user-select: none;
-    }
-
-    .chip:hover {
-      border-color: var(--purple-500);
-      background: var(--purple-50);
-    }
-
-    .chip.active {
-      background: linear-gradient(90deg, var(--pink-500), var(--purple-500));
-      color: #fff;
-      border-color: transparent;
-      box-shadow: 0 4px 10px rgba(236, 72, 153, 0.25);
-    }
-
-    select {
-      padding: 10px 12px;
-      border-radius: 12px;
-      border: 1.5px solid var(--gray-200);
-      font-size: 0.9rem;
-      font-weight: 600;
-      color: var(--gray-700);
-      background: #fff;
-      outline: none;
-    }
-
-    select:focus {
-      border-color: var(--purple-500);
-    }
-
-    .btn-primary {
-      width: 100%;
-      margin-top: 22px;
-      padding: 15px 20px;
-      border: none;
-      border-radius: 14px;
-      background: linear-gradient(90deg, var(--pink-500) 0%, var(--purple-600) 100%);
-      color: #fff;
-      font-size: 1.05rem;
-      font-weight: 800;
-      cursor: pointer;
-      box-shadow: 0 8px 20px rgba(124, 58, 237, 0.25);
-      transition: transform 0.15s ease, opacity 0.15s ease;
-    }
-
-    .btn-primary:hover {
-      transform: translateY(-1px);
-      opacity: 0.95;
-    }
-
-    .result-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-
-    .filter-summary {
-      font-size: 0.85rem;
-      color: var(--purple-700);
-      background: var(--purple-100);
-      padding: 6px 12px;
-      border-radius: 999px;
-      font-weight: 700;
-    }
-
-    .product-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 20px;
-    }
-
-    .product-card {
-      background: #fff;
-      border-radius: 18px;
-      border: 1.5px solid var(--pink-100);
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
-      position: relative;
-      transition: transform 0.15s ease;
-    }
-
-    .product-card:hover {
-      transform: translateY(-3px);
-      border-color: var(--purple-500);
-    }
-
-    .card-top-badges {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
-
-    .rank-badge {
-      background: linear-gradient(90deg, var(--pink-500), var(--purple-600));
-      color: #fff;
-      font-weight: 800;
-      font-size: 0.82rem;
-      padding: 4px 10px;
-      border-radius: 999px;
-    }
-
-    .score-badge {
-      background: var(--purple-50);
-      color: var(--purple-700);
-      border: 1px solid var(--purple-100);
-      font-weight: 800;
-      font-size: 0.82rem;
-      padding: 4px 10px;
-      border-radius: 999px;
-    }
-
-    .product-meta {
-      font-size: 0.78rem;
-      color: var(--gray-500);
-      font-weight: 600;
-      margin-bottom: 4px;
-    }
-
-    .product-name {
-      font-size: 1.1rem;
-      font-weight: 800;
-      color: var(--gray-900);
-      margin-bottom: 8px;
-    }
-
-    .price-row {
-      display: flex;
-      align-items: baseline;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-bottom: 10px;
-    }
-
-    .price-main {
-      font-size: 1.25rem;
-      font-weight: 800;
-      color: var(--pink-600);
-    }
-
-    .price-unit {
-      font-size: 0.8rem;
-      color: var(--gray-500);
-      background: var(--gray-100);
-      padding: 2px 8px;
-      border-radius: 6px;
-      font-weight: 600;
-    }
-
-    .tag-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-bottom: 12px;
-    }
-
-    .badge-good {
-      background: var(--green-100);
-      color: var(--green-700);
-      font-size: 0.75rem;
-      font-weight: 700;
-      padding: 3px 8px;
-      border-radius: 6px;
-    }
-
-    .badge-warn {
-      background: var(--red-100);
-      color: var(--red-700);
-      font-size: 0.75rem;
-      font-weight: 700;
-      padding: 3px 8px;
-      border-radius: 6px;
-    }
-
-    .badge-trend {
-      background: var(--amber-100);
-      color: var(--amber-700);
-      font-size: 0.75rem;
-      font-weight: 700;
-      padding: 3px 8px;
-      border-radius: 6px;
-    }
-
-    .ai-reason-box {
-      background: var(--pink-50);
-      border-radius: 12px;
-      padding: 12px;
-      font-size: 0.85rem;
-      color: var(--gray-700);
-      margin-bottom: 12px;
-    }
-
-    .ai-reason-box strong {
-      color: var(--purple-700);
-      display: block;
-      margin-bottom: 4px;
-    }
-
-    .pros-cons {
-      font-size: 0.82rem;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      margin-bottom: 14px;
-    }
-
-    .pros-text {
-      color: var(--green-700);
-    }
-
-    .cons-text {
-      color: var(--amber-700);
-    }
-
-    .review-snippet {
-      border-top: 1px dashed var(--gray-200);
-      padding-top: 10px;
-      font-size: 0.8rem;
-      color: var(--gray-500);
-      margin-bottom: 14px;
-    }
-
-    .card-actions {
-      display: flex;
-      gap: 8px;
-    }
-
-    .btn-outline {
-      flex: 1;
-      padding: 9px 12px;
-      border-radius: 10px;
-      border: 1.5px solid var(--purple-500);
-      background: #fff;
-      color: var(--purple-600);
-      font-size: 0.85rem;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-
-    .btn-outline.selected {
-      background: var(--purple-600);
-      color: #fff;
-    }
-
-    .compare-bar {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: rgba(17, 24, 39, 0.95);
-      color: #fff;
-      padding: 14px 20px;
-      display: none;
-      justify-content: center;
-      z-index: 200;
-      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2);
-    }
-
-    .compare-bar.visible {
-      display: flex;
-    }
-
-    .compare-bar-inner {
-      max-width: 1120px;
-      width: 100%;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .btn-compare-open {
-      background: linear-gradient(90deg, var(--pink-500), var(--purple-500));
-      color: #fff;
-      border: none;
-      padding: 10px 18px;
-      border-radius: 10px;
-      font-weight: 800;
-      cursor: pointer;
-    }
-
-    .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.55);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-      z-index: 300;
-    }
-
-    .modal-backdrop.open {
-      display: flex;
-    }
-
-    .modal-content {
-      background: #fff;
-      border-radius: 20px;
-      max-width: 900px;
-      width: 100%;
-      max-height: 88vh;
-      overflow-y: auto;
-      padding: 24px;
-    }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-    }
-
-    .btn-close {
-      background: var(--gray-100);
-      border: none;
-      padding: 6px 12px;
-      border-radius: 8px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    table.compare-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.85rem;
-    }
-
-    table.compare-table th,
-    table.compare-table td {
-      border: 1px solid var(--gray-200);
-      padding: 10px;
-      text-align: left;
-      vertical-align: top;
-    }
-
-    table.compare-table th {
-      background: var(--purple-50);
-      color: var(--purple-700);
-      width: 120px;
-    }
-
-    .disclaimer-footer {
-      margin-top: 32px;
-      padding: 16px;
-      background: #fff;
-      border-radius: 14px;
-      font-size: 0.8rem;
-      color: var(--gray-500);
-      border: 1px solid var(--gray-200);
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; }
+    body { background: linear-gradient(135deg, #fdf2f8 0%, #f3e8ff 100%); color: #1f2937; padding-bottom: 90px; }
+    header { background: #fff; border-bottom: 2px solid #fbcfe8; padding: 16px 20px; position: sticky; top: 0; z-index: 50; }
+    .header-box { max-width: 1080px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+    .brand { font-size: 1.35rem; font-weight: 900; color: #db2777; }
+    .brand span { color: #7c3aed; }
+    .sample-tag { font-size: 0.78rem; background: #f3f4f6; color: #4b5563; padding: 5px 10px; border-radius: 8px; }
+    .wrap { max-width: 1080px; margin: 0 auto; padding: 20px; }
+    .banner { background: linear-gradient(120deg, #fbcfe8, #ddd6fe); padding: 24px; border-radius: 18px; margin-bottom: 20px; }
+    .banner h1 { font-size: 1.5rem; margin-bottom: 6px; color: #111827; }
+    .banner p { font-size: 0.92rem; color: #374151; }
+    .panel { background: #fff; border-radius: 18px; padding: 22px; border: 1px solid #fce7f3; box-shadow: 0 4px 15px rgba(0,0,0,0.04); margin-bottom: 22px; }
+    .panel-title { font-size: 1.1rem; font-weight: 800; color: #6d28d9; margin-bottom: 16px; }
+    .grid-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 18px; }
+    .field label { display: block; font-weight: 700; font-size: 0.9rem; margin-bottom: 8px; color: #374151; }
+    .budget-card { background: #fdf2f8; padding: 12px; border-radius: 12px; border: 1px solid #fbcfe8; }
+    .budget-num { font-size: 1.2rem; font-weight: 900; color: #db2777; }
+    input[type="range"] { width: 100%; margin-top: 8px; accent-color: #ec4899; cursor: pointer; }
+    .chips { display: flex; flex-wrap: wrap; gap: 7px; }
+    .chip { padding: 7px 13px; border-radius: 999px; border: 1.5px solid #e5e7eb; background: #fff; font-size: 0.84rem; font-weight: 700; cursor: pointer; }
+    .chip.on { background: linear-gradient(90deg, #ec4899, #8b5cf6); color: #fff; border-color: transparent; }
+    select { width: 100%; padding: 10px; border-radius: 10px; border: 1.5px solid #e5e7eb; font-size: 0.9rem; font-weight: 600; }
+    .run-btn { width: 100%; margin-top: 20px; padding: 15px; border: none; border-radius: 12px; background: linear-gradient(90deg, #ec4899, #7c3aed); color: #fff; font-size: 1.05rem; font-weight: 800; cursor: pointer; }
+    .run-btn:hover { opacity: 0.93; }
+    .res-top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+    .res-badge { background: #ede9fe; color: #6d28d9; padding: 6px 12px; border-radius: 999px; font-size: 0.84rem; font-weight: 700; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 18px; }
+    .item-card { background: #fff; border-radius: 16px; padding: 18px; border: 1.5px solid #fce7f3; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 3px 12px rgba(0,0,0,0.04); }
+    .badges { display: flex; justify-content: space-between; margin-bottom: 10px; }
+    .b-rank { background: #ec4899; color: #fff; font-size: 0.8rem; font-weight: 800; padding: 3px 10px; border-radius: 999px; }
+    .b-score { background: #f5f3ff; color: #7c3aed; font-size: 0.8rem; font-weight: 800; padding: 3px 10px; border-radius: 999px; }
+    .meta { font-size: 0.78rem; color: #6b7280; margin-bottom: 4px; }
+    .title { font-size: 1.08rem; font-weight: 800; margin-bottom: 8px; }
+    .price-line { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+    .price { font-size: 1.2rem; font-weight: 900; color: #db2777; }
+    .unit-price { font-size: 0.78rem; background: #f3f4f6; padding: 3px 8px; border-radius: 6px; color: #4b5563; font-weight: 600; }
+    .pill-row { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
+    .pill-ok { background: #dcfce7; color: #15803d; font-size: 0.74rem; font-weight: 700; padding: 3px 7px; border-radius: 6px; }
+    .pill-over { background: #fee2e2; color: #b91c1c; font-size: 0.74rem; font-weight: 700; padding: 3px 7px; border-radius: 6px; }
+    .pill-pop { background: #fef3c7; color: #b45309; font-size: 0.74rem; font-weight: 700; padding: 3px 7px; border-radius: 6px; }
+    .reason { background: #fdf2f8; padding: 11px; border-radius: 10px; font-size: 0.84rem; margin-bottom: 10px; color: #374151; }
+    .reason b { color: #7c3aed; display: block; margin-bottom: 3px; }
+    .detail-list { font-size: 0.81rem; display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+    .ing-box { font-size: 0.79rem; color: #6b7280; border-top: 1px dashed #e5e7eb; padding-top: 8px; margin-bottom: 12px; }
+    .cmp-btn { width: 100%; padding: 9px; border-radius: 10px; border: 1.5px solid #8b5cf6; background: #fff; color: #7c3aed; font-weight: 700; cursor: pointer; }
+    .cmp-btn.picked { background: #7c3aed; color: #fff; }
+    .float-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #111827; color: #fff; padding: 13px 20px; display: none; justify-content: center; z-index: 90; }
+    .float-bar.show { display: flex; }
+    .float-inner { max-width: 1080px; width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .open-cmp { background: #ec4899; color: #fff; border: none; padding: 9px 16px; border-radius: 8px; font-weight: 800; cursor: pointer; }
+    .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; padding: 16px; z-index: 120; }
+    .modal-bg.show { display: flex; }
+    .modal-box { background: #fff; border-radius: 18px; max-width: 880px; width: 100%; max-height: 85vh; overflow-y: auto; padding: 22px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.84rem; margin-top: 12px; }
+    th, td { border: 1px solid #e5e7eb; padding: 9px; text-align: left; }
+    th { background: #f5f3ff; color: #6d28d9; width: 110px; }
+    .notice { margin-top: 28px; background: #fff; padding: 15px; border-radius: 12px; font-size: 0.79rem; color: #6b7280; border: 1px solid #e5e7eb; }
   </style>
-</head><body>
+</head>
+<body>
   <header>
-    <div class="header-inner">
-      <div class="logo">
-        ✨ 틴코스 AI (TeenCos AI)
-        <span class="logo-badge">10대 용돈 맞춤형 뷰티 AI</span>
-      </div>
-      <div class="sample-notice-top">
-        ※ 본 서비스의 제품 가격·후기·성분 데이터는 학습용 예시 데이터입니다.
-      </div>
+    <div class="header-box">
+      <div class="brand">✨ 틴코스 AI <span>(TeenCos AI)</span></div>
+      <div class="sample-tag">※ 안내: 제품·가격·리뷰는 시연용 예시 데이터입니다</div>
     </div>
   </header>
 
-  <main class="container">
-    <section class="hero">
-      <h1>용돈 안에서 실패 없는 인생템 찾기! 💄</h1>
-      <p>
-        예산, 피부 타입, 고민, 용량당 가성비와 실제 구매자 리뷰 감정까지 AI가 한 번에 분석해 딱 맞는 가성비 화장품을 추천해 드립니다.
-      </p>
-    </section>
+  <div class="wrap">
+    <div class="banner">
+      <h1>10대 용돈 맞춤형 가성비 화장품 AI 추천 💄</h1>
+      <p>예산, 피부 고민, 용량당 단가, 구매자 리뷰 긍정률과 성분을 종합 분석해 딱 맞는 제품을 찾아드립니다.</p>
+    </div>
 
-    <!-- 1. 사용자 정보 입력 카드 -->
-    <section class="card">
-      <div class="section-title">1️⃣ 내 피부 & 용돈 예산 입력하기</div>
-
-      <div class="form-grid">
-        <!-- 예산 입력 -->
-        <div class="form-group">
-          <label class="form-label" for="budgetRange">💰 화장품 구매 예산 (최대 금액)</label>
-          <div class="budget-box">
-            <div class="budget-display">
-              <span class="form-sub">설정한 예산 이내 우선 추천</span>
-              <span class="budget-value" id="budgetText">15,000원</span>
+    <div class="panel">
+      <div class="panel-title">1️⃣ 내 피부 정보 & 예산 선택하기</div>
+      <div class="grid-form">
+        <div class="field">
+          <label>💰 최대 구매 예산: <span class="budget-num" id="budgetLabel">15,000원</span></label>
+          <div class="budget-card">
+            <input type="range" id="budgetInput" min="5000" max="40000" step="1000" value="15000" />
+            <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:#6b7280; margin-top:4px;">
+              <span>5,000원</span><span>20,000원</span><span>40,000원</span>
             </div>
-            <input type="range" id="budgetRange" min="5000" max="40000" step="1000" value="15000" />
           </div>
         </div>
 
-        <!-- 피부 유형 -->
-        <div class="form-group">
-          <span class="form-label">💧 나의 피부 유형</span>
-          <div class="chip-group" id="skinTypeGroup">
-            <button type="button" class="chip active" data-value="지성">지성</button>
-            <button type="button" class="chip" data-value="건성">건성</button>
-            <button type="button" class="chip" data-value="복합성">복합성</button>
-            <button type="button" class="chip" data-value="민감성">민감성</button>
+        <div class="field">
+          <label>💧 피부 유형</label>
+          <div class="chips" id="skinChips">
+            <button type="button" class="chip on" data-val="지성">지성</button>
+            <button type="button" class="chip" data-val="건성">건성</button>
+            <button type="button" class="chip" data-val="복합성">복합성</button>
+            <button type="button" class="chip" data-val="민감성">민감성</button>
           </div>
         </div>
 
-        <!-- 피부 고민 (다중 선택 가능) -->
-        <div class="form-group">
-          <span class="form-label">🔍 주요 피부 고민 (중복 선택 가능)</span>
-          <div class="chip-group" id="concernGroup">
-            <button type="button" class="chip active" data-value="트러블">트러블/여드름</button>
-            <button type="button" class="chip" data-value="수분부족">속건조/수분부족</button>
-            <button type="button" class="chip" data-value="피지">피지/모공</button>
-            <button type="button" class="chip" data-value="붉은기">붉은기/진정</button>
-            <button type="button" class="chip" data-value="잡티">잡티/칙칙함</button>
+        <div class="field">
+          <label>🔍 피부 고민 (중복 선택 가능)</label>
+          <div class="chips" id="concernChips">
+            <button type="button" class="chip on" data-val="트러블">트러블/여드름</button>
+            <button type="button" class="chip" data-val="수분부족">속건조/수분부족</button>
+            <button type="button" class="chip" data-val="피지">피지/모공</button>
+            <button type="button" class="chip" data-val="붉은기">붉은기/진정</button>
+            <button type="button" class="chip" data-val="잡티">잡티/톤업</button>
           </div>
         </div>
 
-        <!-- 화장품 카테고리 -->
-        <div class="form-group">
-          <label class="form-label" for="categorySelect">🧴 원하는 화장품 종류</label>
-          <select id="categorySelect">
-            <option value="전체">전체 카테고리 보기</option>
-            <option value="스킨/토너">스킨 / 토너 / 패드</option>
-            <option value="수분크림">수분크림 / 진정젤</option>
+        <div class="field">
+          <label>🧴 원하는 화장품 종류</label>
+          <select id="catSelect">
+            <option value="전체">전체 카테고리</option>
+            <option value="스킨/토너">스킨 / 토너</option>
+            <option value="수분크림">수분크림 / 젤</option>
             <option value="선크림">선크림 / 톤업선</option>
-            <option value="클렌징">클렌징폼 / 워터</option>
-            <option value="립틴트">립틴트 / 립밤 (색조)</option>
+            <option value="클렌징">클렌징폼</option>
+            <option value="립틴트">립틴트 (색조)</option>
             <option value="베이스">쿠션 / 파우더 (색조)</option>
           </select>
         </div>
 
-        <!-- 선호 가격대 -->
-        <div class="form-group">
-          <label class="form-label" for="priceTierSelect">🏷️ 선호하는 제품 가격대</label>
-          <select id="priceTierSelect">
-            <option value="all">상관없음 (가성비 최우선)</option>
-            <option value="under10000">1만 원 이하 초가성비</option>
-            <option value="10000to20000">1만 원 ~ 2만 원대</option>
+        <div class="field">
+          <label>🏷️ 선호 가격대</label>
+          <select id="tierSelect">
+            <option value="all">상관없음 (가성비 우선)</option>
+            <option value="u10">1만 원 이하 초가성비</option>
+            <option value="10to20">1만 원 ~ 2만 원대</option>
           </select>
         </div>
 
-        <!-- 퍼스널컬러 (부가 요소) -->
-        <div class="form-group">
-          <label class="form-label" for="personalColorSelect">🎨 퍼스널컬러 (부가 참고용)</label>
-          <select id="personalColorSelect">
+        <div class="field">
+          <label>🎨 퍼스널컬러 (부가 참고용)</label>
+          <select id="pcSelect">
             <option value="무관">잘 모름 / 상관없음</option>
             <option value="봄웜">봄 웜톤</option>
             <option value="여름쿨">여름 쿨톤</option>
             <option value="가을웜">가을 웜톤</option>
             <option value="겨울쿨">겨울 쿨톤</option>
           </select>
-          <span class="form-sub">* 색조 제품 추천 시 가산점으로만 소폭 반영됩니다.</span>
         </div>
       </div>
 
-      <button type="button" class="btn-primary" id="analyzeBtn">
-        🤖 AI 가성비 화장품 분석 및 추천받기
-      </button>
-    </section>
+      <button type="button" class="run-btn" id="calcBtn">🤖 AI 맞춤 가성비 화장품 추천받기</button>
+    </div>
 
-    <!-- 2. AI 추천 결과 영역 -->
-    <section id="resultSection">
-      <div class="result-header">
-        <div class="section-title" style="margin-bottom:0;">2️⃣ 틴코스 AI 맞춤형 추천 순위</div>
-        <div class="filter-summary" id="filterSummaryText">조건 분석 완료</div>
-      </div>
+    <div class="res-top">
+      <div class="panel-title" style="margin-bottom:0;">2️⃣ AI 맞춤형 추천 결과</div>
+      <div class="res-badge" id="statusText">추천 결과 표시 중</div>
+    </div>
 
-      <div class="product-grid" id="productGrid"></div>
-    </section>
+    <div class="cards" id="cardList"></div>
 
-    <!-- 안내 문구 -->
-    <footer class="disclaimer-footer">
-      <strong>[안내 및 주의사항]</strong><br />
-      1. 본 페이지에 수록된 제품명, 가격, 용량, 성분, 후기 요약 및 인기도 점수는 서비스 시연을 위해 구성된 <strong>예시 데이터</strong>입니다.<br />
-      2. 제공되는 피부 유형 및 성분 적합성 정보는 화장품 선택을 돕기 위한 일반적 참고 정보이며, 의학적 진단이나 치료를 대신하지 않습니다. 피부 이상 반응이 있을 경우 사용을 중단하고 전문가와 상담하세요.
-    </footer>
-  </main>
+    <div class="notice">
+      <strong>※ 안내사항:</strong> 본 웹사이트의 모든 제품명, 가격, 리뷰, 성분 정보는 프로젝트 시연을 위한 <strong>예시 데이터</strong>입니다. 피부 적합성 안내는 참고용이며 의학적 진단이나 처방이 아닙니다.
+    </div>
+  </div>
 
-  <!-- 하단 플로팅 비교 바 -->
-  <div class="compare-bar" id="compareBar">
-    <div class="compare-bar-inner">
-      <div id="compareBarText">비교함에 0개 제품이 담겼습니다 (최대 3개)</div>
-      <div style="display:flex; gap:8px;">
-        <button type="button" class="btn-close" id="clearCompareBtn">비우기</button>
-        <button type="button" class="btn-compare-open" id="openCompareModalBtn">한눈에 비교하기</button>
+  <div class="float-bar" id="floatBar">
+    <div class="float-inner">
+      <span id="floatMsg">선택된 제품 0개 (최대 3개 비교)</span>
+      <div>
+        <button type="button" id="resetCmpBtn" style="padding:8px 12px; border-radius:8px; border:none; margin-right:6px; cursor:pointer;">초기화</button>
+        <button type="button" class="open-cmp" id="showCmpBtn">선택 제품 비교하기</button>
       </div>
     </div>
   </div>
 
-  <!-- 제품 비교 모달 -->
-  <div class="modal-backdrop" id="compareModal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3 style="color:var(--purple-700); font-weight:800;">📊 선택한 제품 가성비·성분 상세 비교</h3>
-        <button type="button" class="btn-close" id="closeModalBtn">닫기 ✕</button>
+  <div class="modal-bg" id="cmpModal">
+    <div class="modal-box">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h3 style="color:#6d28d9;">📊 제품 스펙·가성비 상세 비교</h3>
+        <button type="button" id="hideCmpBtn" style="padding:6px 12px; border:none; border-radius:8px; cursor:pointer; font-weight:700;">닫기 ✕</button>
       </div>
-      <div id="compareTableContainer"></div>
+      <div id="cmpTableWrap"></div>
     </div>
   </div>
 
   <script>
-    // [예시 데이터] 10대 청소년 인기 가성비 화장품 샘플 데이터베이스
-    const PRODUCTS = [
-      {
-        id: 1,
-        brand: "퓨어틴 (예시)",
-        name: "시카 밸런스 수딩 토너 300ml",
-        category: "스킨/토너",
-        price: 9800,
-        volume: 300,
-        unit: "ml",
-        rating: 4.8,
-        trendScore: 92,
-        suitableSkins: ["지성", "복합성", "민감성"],
-        targetConcerns: ["트러블", "붉은기", "피지"],
-        keyIngredients: ["병풀추출물(시카)", "판테놀", "티트리잎수"],
-        cautionIngredients: "없음 (무향료·약산성)",
-        personalColor: ["무관"],
-        positiveRate: 94,
-        posReview: "대용량이라 스킨팩으로 팍팍 써도 부담 없고 여드름 붉은기가 빨리 가라앉아요.",
-        negReview: "물처럼 가벼운 제형이라 한겨울 건성 피부에는 보습력이 살짝 부족할 수 있어요."
-      },
-      {
-        id: 2,
-        brand: "하이드로랩 (예시)",
-        name: "8중 히알루론산 수분 듬뿍 크림 100ml",
-        category: "수분크림",
-        price: 11900,
-        volume: 100,
-        unit: "ml",
-        rating: 4.7,
-        trendScore: 89,
-        suitableSkins: ["건성", "복합성", "민감성"],
-        targetConcerns: ["수분부족", "붉은기"],
-        keyIngredients: ["히알루론산", "베타글루칸", "세라마이드"],
-        cautionIngredients: "페녹시에탄올 소량 함유",
-        personalColor: ["무관"],
-        positiveRate: 91,
-        posReview: "100ml 대용량에 1만 원 초반이라 가성비 최고! 속건조가 싹 잡히고 화장이 잘 먹어요.",
-        negReview: "지성 피부가 여름에 많이 바르면 약간 번들거릴 수 있습니다."
-      },
-      {
-        id: 3,
-        brand: "클린버블 (예시)",
-        name: "약산성 살리실산 아크네 폼클렌저 150ml",
-        category: "클렌징",
-        price: 7900,
-        volume: 150,
-        unit: "ml",
-        rating: 4.6,
-        trendScore: 88,
-        suitableSkins: ["지성", "복합성"],
-        targetConcerns: ["트러블", "피지"],
-        keyIngredients: ["살리실산(BHA)", "어성초추출물", "글리세린"],
-        cautionIngredients: "살리실산 함유 (극민감성 주의)",
-        personalColor: ["무관"],
-        positiveRate: 89,
-        posReview: "학생 용돈으로 사기 딱 좋은 가격이고 좁쌀 여드름이랑 코 피지 정리에 효과 좋아요.",
-        negReview: "세정력이 좋은 편이라 건성 피부는 세안 후 바로 스킨을 발라야 당기지 않아요."
-      },
-      {
-        id: 4,
-        brand: "선데이유스 (예시)",
-        name: "무기자차 마일드 톤업 선크림 50ml",
-        category: "선크림",
-        price: 10500,
-        volume: 50,
-        unit: "ml",
-        rating: 4.7,
-        trendScore: 95,
-        suitableSkins: ["지성", "복합성", "민감성"],
-        targetConcerns: ["잡티", "피지"],
-        keyIngredients: ["징크옥사이드", "나이아신아마이드", "칼라민"],
-        cautionIngredients: "무기자차 특성상 백탁 주의",
-        personalColor: ["여름쿨", "봄웜"],
-        positiveRate: 90,
-        posReview: "학교 갈 때 파데 프리로 바르기 딱 좋아요! 자연스럽게 화사해지고 눈 시림이 없어요.",
-        negReview: "보송한 마무리감이라 각질 부각이 있을 수 있으니 기초를 탄탄히 해야 해요."
-      },
-      {
-        id: 5,
-        brand: "글로우틴트 (예시)",
-        name: "과즙 탕후루 워터 글로우 틴트 4g",
-        category: "립틴트",
-        price: 6900,
-        volume: 4,
-        unit: "g",
-        rating: 4.9,
-        trendScore: 98,
-        suitableSkins: ["지성", "건성", "복합성", "민감성"],
-        targetConcerns: ["잡티"],
-        keyIngredients: ["스쿠알란", "호호바씨오일", "비타민E"],
-        cautionIngredients: "적색색소 및 향료 포함",
-        personalColor: ["봄웜", "여름쿨"],
-        positiveRate: 96,
-        posReview: "SNS에서 난리 난 이유를 알겠어요. 6천 원대인데 광택이 예쁘고 착색도 기승전핑크가 아니에요!",
-        negReview: "워터 제형이라 입술 각질이 심할 때는 립밤을 먼저 바르는 게 좋습니다."
-      },
-      {
-        id: 6,
-        brand: "벨벳무드 (예시)",
-        name: "블러링 에어 매트 립틴트 4.5g",
-        category: "립틴트",
-        price: 8500,
-        volume: 4.5,
-        unit: "g",
-        rating: 4.6,
-        trendScore: 90,
-        suitableSkins: ["지성", "복합성", "건성", "민감성"],
-        targetConcerns: ["잡티"],
-        keyIngredients: ["시어버터", "해바라기씨오일"],
-        cautionIngredients: "실리콘 오일·향료 포함",
-        personalColor: ["가을웜", "겨울쿨"],
-        positiveRate: 88,
-        posReview: "교복에 찰떡인 차분한 MLBB 컬러가 많고 입술 주름 부각 없이 보송하게 발려요.",
-        negReview: "음식을 먹으면 안쪽이 지워져서 수정 화장이 필요합니다."
-      },
-      {
-        id: 7,
-        brand: "어성초핏 (예시)",
-        name: "어성초 80% 진정 수분 젤크림 80ml",
-        category: "수분크림",
-        price: 12800,
-        volume: 80,
-        unit: "ml",
-        rating: 4.8,
-        trendScore: 94,
-        suitableSkins: ["지성", "복합성", "민감성"],
-        targetConcerns: ["트러블", "붉은기", "피지"],
-        keyIngredients: ["약모밀(어성초)추출물", "알란토인", "판테놀"],
-        cautionIngredients: "없음 (저자극 테스트 완료)",
-        personalColor: ["무관"],
-        positiveRate: 93,
-        posReview: "유분기가 거의 없는 젤 타입이라 여드름 피부도 모공 막힘 걱정 없이 쓰기 좋아요.",
-        negReview: "건성 피부에게는 보습 지속력이 짧게 느껴질 수 있습니다."
-      },
-      {
-        id: 8,
-        brand: "세범컷 (예시)",
-        name: "노세범 미네랄 블러 팩트 8g",
-        category: "베이스",
-        price: 6000,
-        volume: 8,
-        unit: "g",
-        rating: 4.8,
-        trendScore: 96,
-        suitableSkins: ["지성", "복합성"],
-        targetConcerns: ["피지", "트러블"],
-        keyIngredients: ["실리카", "옥수수전분", "녹차추출물"],
-        cautionIngredients: "건성 피부 과다 사용 시 건조함",
-        personalColor: ["무관"],
-        positiveRate: 95,
-        posReview: "오후에 앞머리 떡질 때나 티존 기름기 잡을 때 필수템! 6천 원이라 파우치에 쟁여둡니다.",
-        negReview: "퍼프가 조금 얇아서 따로 브러시를 쓰면 더 뭉침 없이 발려요."
-      },
-      {
-        id: 9,
-        brand: "모찌커버 (예시)",
-        name: "세미매트 롱웨어 학생 쿠션 15g",
-        category: "베이스",
-        price: 14900,
-        volume: 15,
-        unit: "g",
-        rating: 4.5,
-        trendScore: 87,
-        suitableSkins: ["지성", "복합성"],
-        targetConcerns: ["잡티", "피지"],
-        keyIngredients: ["나이아신아마이드", "병풀잎추출물"],
-        cautionIngredients: "향료 및 자외선차단성분 포함",
-        personalColor: ["봄웜", "여름쿨"],
-        positiveRate: 86,
-        posReview: "1만 원대 중반인데 잡티 커버력이 좋고 얇게 밀착돼서 두꺼워 보이지 않아요.",
-        negReview: "리필이 미포함된 단품 구성이라 용량 대비 빠르게 닳는 편입니다."
-      },
-      {
-        id: 10,
-        brand: "판테놀원 (예시)",
-        name: "판테놀 5% 장벽 보습 토너 250ml",
-        category: "스킨/토너",
-        price: 11000,
-        volume: 250,
-        unit: "ml",
-        rating: 4.7,
-        trendScore: 85,
-        suitableSkins: ["건성", "민감성", "복합성"],
-        targetConcerns: ["수분부족", "붉은기"],
-        keyIngredients: ["판테놀", "세라마이드NP", "마데카소사이드"],
-        cautionIngredients: "없음 (무알코올)",
-        personalColor: ["무관"],
-        positiveRate: 92,
-        posReview: "환절기에 피부 뒤집어졌을 때 닦토 대신 흡토로 두 번 레이어링하면 속당김이 사라져요.",
-        negReview: "약간 점성이 있어서 닦아내는 토너로 쓰기엔 솜에 흡수가 느립니다."
+    const DB = [
+      { id: 1, brand: "퓨어틴(예시)", name: "시카 진정 대용량 토너 300ml", cat: "스킨/토너", price: 9800, vol: 300, unit: "ml", rate: 4.8, trend: 93, skins: ["지성","복합성","민감성"], concerns: ["트러블","붉은기","피지"], ing: ["병풀추출물","판테놀","티트리"], caution: "특이 주의성분 없음", pc: ["무관"], posRate: 94, good: "300ml 대용량에 9천 원대라 스킨팩으로 쓰기 좋고 붉은기 진정이 빨라요.", bad: "물 제형이라 건성 피부엔 보습이 가벼울 수 있어요." },
+      { id: 2, brand: "하이드로랩(예시)", name: "히알루론산 수분 듬뿍 크림 100ml", cat: "수분크림", price: 11900, vol: 100, unit: "ml", rate: 4.7, trend: 89, skins: ["건성","복합성","민감성"], concerns: ["수분부족","붉은기"], ing: ["히알루론산","세라마이드","베타글루칸"], caution: "페녹시에탄올 소량", pc: ["무관"], posRate: 91, good: "100ml 짐승용량에 속건조가 싹 잡혀서 가성비 최고예요.", bad: "지성 피부가 여름에 많이 바르면 유분감이 돌 수 있어요." },
+      { id: 3, brand: "클린버블(예시)", name: "약산성 바하 아크네 폼클렌저 150ml", cat: "클렌징", price: 7900, vol: 150, unit: "ml", rate: 4.6, trend: 88, skins: ["지성","복합성"], concerns: ["트러블","피지"], ing: ["살리실산(BHA)","어성초추출물"], caution: "살리실산 함유(극민감 주의)", pc: ["무관"], posRate: 89, good: "학생 용돈으로 사기 부담 없고 좁쌀 트러블과 코 피지가 잘 씻겨요.", bad: "건성은 세안 직후 바로 토너를 발라줘야 당기지 않아요." },
+      { id: 4, brand: "선데이유스(예시)", name: "무기자차 마일드 톤업 선크림 50ml", cat: "선크림", price: 10500, vol: 50, unit: "ml", rate: 4.7, trend: 95, skins: ["지성","복합성","민감성"], concerns: ["잡티","피지"], ing: ["징크옥사이드","나이아신아마이드"], caution: "무기자차 백탁 주의", pc: ["여름쿨","봄웜"], posRate: 90, good: "학교 갈 때 파데 프리로 바르기 좋고 눈 시림이 전혀 없어요.", bad: "각질이 많을 때 바르면 들뜰 수 있어 기초 보습이 중요해요." },
+      { id: 5, brand: "글로우틴트(예시)", name: "과즙 탕후루 워터 틴트 4g", cat: "립틴트", price: 6900, vol: 4, unit: "g", rate: 4.9, trend: 98, skins: ["지성","건성","복합성","민감성"], concerns: ["잡티"], ing: ["스쿠알란","호호바오일"], caution: "향료 및 색소 포함", pc: ["봄웜","여름쿨"], posRate: 96, good: "6천 원대인데 광택감이 예쁘고 착색 컬러가 자연스러워 SNS 대란템이에요.", bad: "입술 각질이 심할 때는 립밤을 먼저 바르는 게 좋아요." },
+      { id: 6, brand: "벨벳무드(예시)", name: "블러링 에어 매트 틴트 4.5g", cat: "립틴트", price: 8500, vol: 4.5, unit: "g", rate: 4.6, trend: 90, skins: ["지성","건성","복합성","민감성"], concerns: ["잡티"], ing: ["시어버터","비타민E"], caution: "실리콘오일·향료 포함", pc: ["가을웜","겨울쿨"], posRate: 88, good: "교복에 어울리는 차분한 컬러감에 주름 끼임 없이 보송해요.", bad: "식사 후엔 안쪽 수정 화장이 필요해요." },
+      { id: 7, brand: "어성초핏(예시)", name: "어성초 80% 진정 수분젤 80ml", cat: "수분크림", price: 12800, vol: 80, unit: "ml", rate: 4.8, trend: 94, skins: ["지성","복합성","민감성"], concerns: ["트러블","붉은기","피지"], ing: ["어성초추출물","알란토인","판테놀"], caution: "특이 주의성분 없음", pc: ["무관"], posRate: 93, good: "유분기 없는 산뜻한 젤이라 여드름 피부도 모공 막힘 걱정 없이 써요.", bad: "건성 피부에는 보습 지속력이 다소 짧아요." },
+      { id: 8, brand: "세범컷(예시)", name: "노세범 미네랄 블러 팩트 8g", cat: "베이스", price: 6000, vol: 8, unit: "g", rate: 4.8, trend: 96, skins: ["지성","복합성"], concerns: ["피지","트러블"], ing: ["실리카","녹차추출물"], caution: "건성 피부 과다 사용 주의", pc: ["무관"], posRate: 95, good: "6천 원으로 오후 유분기랑 앞머리 떡짐을 한 번에 잡아주는 필수템이에요.", bad: "내장 퍼프 대신 브러시를 쓰면 더 얇게 발려요." },
+      { id: 9, brand: "모찌커버(예시)", name: "세미매트 학생 데일리 쿠션 15g", cat: "베이스", price: 14900, vol: 15, unit: "g", rate: 4.5, trend: 87, skins: ["지성","복합성"], concerns: ["잡티","피지"], ing: ["나이아신아마이드","병풀잎추출물"], caution: "향료 포함", pc: ["봄웜","여름쿨"], posRate: 86, good: "1만 원대 중반인데 잡티 커버력이 좋고 얇게 밀착돼요.", bad: "리필 미포함 단품이라 용량 대비 빨리 쓰는 편이에요." },
+      { id: 10, brand: "판테놀원(예시)", name: "판테놀 5% 장벽 보습 토너 250ml", cat: "스킨/토너", price: 11000, vol: 250, unit: "ml", rate: 4.7, trend: 86, skins: ["건성","민감성","복합성"], concerns: ["수분부족","붉은기"], ing: ["판테놀","세라마이드NP"], caution: "무알코올·무향료", pc: ["무관"], posRate: 92, good: "환절기 속당김을 잡아주고 민감한 날에도 따갑지 않아요.", bad: "약간 점성이 있어 닦토보다는 손으로 흡수시키는 게 좋아요." }
+    ];let pickedIds = [];
+
+    function unitPriceLabel(p) {
+      if (p.unit === "g" && p.vol <= 20) {
+        return `1g당 ${Math.round(p.price / p.vol).toLocaleString()}원 (${p.vol}g)`;
       }
-    ];// 비교함 상태 저장 배열 (최대 3개)
-    let compareList = [];
-
-    // DOM 요소 참조
-    const budgetRange = document.getElementById("budgetRange");
-    const budgetText = document.getElementById("budgetText");
-    const skinTypeGroup = document.getElementById("skinTypeGroup");
-    const concernGroup = document.getElementById("concernGroup");
-    const categorySelect = document.getElementById("categorySelect");
-    const priceTierSelect = document.getElementById("priceTierSelect");
-    const personalColorSelect = document.getElementById("personalColorSelect");
-    const analyzeBtn = document.getElementById("analyzeBtn");
-    const productGrid = document.getElementById("productGrid");
-    const filterSummaryText = document.getElementById("filterSummaryText");
-
-    const compareBar = document.getElementById("compareBar");
-    const compareBarText = document.getElementById("compareBarText");
-    const clearCompareBtn = document.getElementById("clearCompareBtn");
-    const openCompareModalBtn = document.getElementById("openCompareModalBtn");
-    const compareModal = document.getElementById("compareModal");
-    const closeModalBtn = document.getElementById("closeModalBtn");
-    const compareTableContainer = document.getElementById("compareTableContainer");
-
-    // 1. 예산 슬라이더 실시간 표시
-    budgetRange.addEventListener("input", function () {
-      const val = Number(this.value);
-      budgetText.textContent = val.toLocaleString() + "원";
-    });
-
-    // 2. 피부 유형 단일 선택 칩
-    skinTypeGroup.addEventListener("click", function (e) {
-      if (!e.target.classList.contains("chip")) return;
-      skinTypeGroup.querySelectorAll(".chip").forEach(btn => btn.classList.remove("active"));
-      e.target.classList.add("active");
-    });
-
-    // 3. 피부 고민 다중 선택 칩 (최소 1개 유지)
-    concernGroup.addEventListener("click", function (e) {
-      if (!e.target.classList.contains("chip")) return;
-      const activeChips = concernGroup.querySelectorAll(".chip.active");
-      if (e.target.classList.contains("active") && activeChips.length === 1) {
-        return; // 최소 1개는 선택 유지
-      }
-      e.target.classList.toggle("active");
-    });
-
-    // 4. 단위 가격 계산 도우미 (10ml 또는 10g 기준)
-    function getUnitPriceText(product) {
-      if (product.unit === "g" && product.volume <= 20) {
-        const per1g = Math.round(product.price / product.volume);
-        return `1g당 ${per1g.toLocaleString()}원 (${product.volume}g)`;
-      }
-      const per10 = Math.round((product.price / product.volume) * 10);
-      return `10${product.unit}당 ${per10.toLocaleString()}원 (${product.volume}${product.unit})`;
+      return `10${p.unit}당 ${Math.round((p.price / p.vol) * 10).toLocaleString()}원 (${p.vol}${p.unit})`;
     }
 
-    // 5. AI 종합 점수 계산 및 추천 이유 생성 함수
-    function evaluateProduct(product, userInput) {
-      let score = 0;
-      const reasons = [];
+    function renderAll() {
+      const budget = Number(document.getElementById("budgetInput").value);
+      const skin = document.querySelector("#skinChips .chip.on").getAttribute("data-val");
+      const concerns = Array.from(document.querySelectorAll("#concernChips .chip.on")).map(el => el.getAttribute("data-val"));
+      const cat = document.getElementById("catSelect").value;
+      const tier = document.getElementById("tierSelect").value;
+      const pc = document.getElementById("pcSelect").value;
 
-      // (A) 예산 및 가성비 점수 (최대 35점)
-      const isWithinBudget = product.price <= userInput.budget;
-      if (isWithinBudget) {
-        const savingRatio = (userInput.budget - product.price) / userInput.budget;
-        score += 25 + Math.round(savingRatio * 10);
-        reasons.push(`설정하신 예산(${userInput.budget.toLocaleString()}원) 이내로 용돈 부담이 적습니다.`);
-      } else {
-        const overAmount = product.price - userInput.budget;
-        score += Math.max(5, 18 - Math.floor(overAmount / 1000) * 3);
-        reasons.push(`예산보다 ${overAmount.toLocaleString()}원 높지만 성분·평점 만족도가 높은 제품입니다.`);
-      }
-
-      // (B) 피부 유형 및 피부 고민 적합성 (최대 30점)
-      let skinMatch = product.suitableSkins.includes(userInput.skinType);
-      if (skinMatch) {
-        score += 15;
-      }
-
-      const matchedConcerns = product.targetConcerns.filter(c => userInput.concerns.includes(c));
-      if (matchedConcerns.length > 0) {
-        score += Math.min(15, matchedConcerns.length * 8);
-        reasons.push(`${userInput.skinType} 피부와 '${matchedConcerns.join(", ")}' 고민 케어에 어울리는 ${product.keyIngredients[0]} 성분이 포함되었습니다.`);
-      } else if (skinMatch) {
-        reasons.push(`${userInput.skinType} 피부에 부담 없이 사용하기 좋은 성분을 담았습니다.`);
-      }
-
-      // (C) 구매자 리뷰 긍정 비율 & 평점 (최대 20점)
-      const reviewScore = Math.round((product.rating / 5) * 10 + (product.positiveRate / 100) * 10);
-      score += reviewScore;
-
-      // (D) 10대 SNS 트렌드 및 인기도 (최대 10점)
-      score += Math.round((product.trendScore / 100) * 10);
-
-      // (E) 퍼스널컬러 부가 가산점 (최대 5점 - 부가 요소)
-      if (
-        userInput.personalColor !== "무관" &&
-        product.personalColor.includes(userInput.personalColor)
-      ) {
-        score += 5;
-        reasons.push(`부가 요소로 선택하신 '${userInput.personalColor}' 톤과도 잘 어우러집니다.`);
-      }
-
-      // 최종 점수 100점 상한 보정
-      score = Math.min(99, score);
-
-      // 가격 대비 만족도 등급 산출
-      let valueGrade = "가성비 우수";
-      if (isWithinBudget && product.positiveRate >= 92) {
-        valueGrade = "초가성비 추천템";
-      } else if (!isWithinBudget) {
-        valueGrade = "예산 소폭 초과";
-      }
-
-      return {
-        ...product,
-        aiScore: score,
-        isWithinBudget,
-        valueGrade,
-        aiReason: reasons.join(" ")
-      };
-    }
-
-    // 6. 추천 실행 및 화면 렌더링 (지연 없이 즉시 실행)
-    function runRecommendation() {
-      const budget = Number(budgetRange.value);
-      const skinType = skinTypeGroup.querySelector(".chip.active").dataset.value;
-      const concerns = Array.from(concernGroup.querySelectorAll(".chip.active")).map(el => el.dataset.value);
-      const category = categorySelect.value;
-      const priceTier = priceTierSelect.value;
-      const personalColor = personalColorSelect.value;
-
-      // 1차 필터링 (카테고리 & 선호 가격대)
-      let filtered = PRODUCTS.filter(item => {
-        if (category !== "전체" && item.category !== category) return false;
-        if (priceTier === "under10000" && item.price > 10000) return false;
-        if (priceTier === "10000to20000" && (item.price < 10000 || item.price > 20000)) return false;
+      let list = DB.filter(item => {
+        if (cat !== "전체" && item.cat !== cat) return false;
+        if (tier === "u10" && item.price > 10000) return false;
+        if (tier === "10to20" && (item.price < 10000 || item.price > 20000)) return false;
         return true;
       });
 
-      // 필터 결과가 없으면 전체 제품에서 예산 근접순으로 fallback
-      let fallbackNotice = "";
-      if (filtered.length === 0) {
-        filtered = [...PRODUCTS];
-        fallbackNotice = " (선택한 가격대 조건에 딱 맞는 제품이 없어 전체 인기순으로 확장 표시합니다)";
+      let extraNote = "";
+      if (list.length === 0) {
+        list = DB.slice();
+        extraNote = " (선택한 가격대 조건 제품이 없어 전체 목록에서 분석했습니다)";
       }
 
-      // AI 점수 산출 및 정렬
-      const evaluated = filtered
-        .map(item => evaluateProduct(item, { budget, skinType, concerns, personalColor }))
-        .sort((a, b) => b.aiScore - a.aiScore);
+      const scored = list.map(item => {
+        let pts = 0;
+        const why = [];
+        const inBudget = item.price <= budget;
 
-      filterSummaryText.textContent = `예산 ${budget.toLocaleString()}원 · ${skinType} · ${concerns.join("/")} 기준 총 ${evaluated.length}개 분석 완료${fallbackNotice}`;
+        if (inBudget) {
+          pts += 26 + Math.round(((budget - item.price) / budget) * 9);
+          why.push(`예산(${budget.toLocaleString()}원) 이내로 가성비가 뛰어납니다.`);
+        } else {
+          pts += Math.max(5, 16 - Math.floor((item.price - budget) / 1000) * 3);
+          why.push(`예산보다 ${(item.price - budget).toLocaleString()}원 높지만 평점과 성분 만족도가 높습니다.`);
+        }
 
-      renderProductCards(evaluated);
-    }
+        if (item.skins.includes(skin)) pts += 15;
+        const hit = item.concerns.filter(c => concerns.includes(c));
+        if (hit.length > 0) {
+          pts += Math.min(15, hit.length * 8);
+          why.push(`${skin} 피부와 '${hit.join(", ")}' 고민 케어에 맞는 ${item.ing[0]} 성분이 들어있습니다.`);
+        } else {
+          why.push(`${skin} 피부에 무난하게 쓰기 좋은 성분 구성입니다.`);
+        }
 
-    // 7. 제품 카드 렌더링
-    function renderProductCards(items) {
-      productGrid.innerHTML = "";
+        pts += Math.round((item.rate / 5) * 10 + (item.posRate / 100) * 10);
+        pts += Math.round((item.trend / 100) * 10);
 
-      items.forEach((item, index) => {
-        const isSelected = compareList.includes(item.id);
-        const card = document.createElement("article");
-        card.className = "product-card";
+        if (pc !== "무관" && item.pc.includes(pc)) {
+          pts += 5;
+          why.push(`부가 선택하신 ${pc} 톤과도 잘 어울립니다.`);
+        }
 
-        card.innerHTML = `
-          <div>
-            <div class="card-top-badges">
-              <span class="rank-badge">🏆 추천 ${index + 1}위</span>
-              <span class="score-badge">AI 적합도 ${item.aiScore}점</span>
+        return {
+          ...item,
+          finalScore: Math.min(99, pts),
+          inBudget,
+          whyText: why.join(" ")
+        };
+      }).sort((a, b) => b.finalScore - a.finalScore);
+
+      document.getElementById("statusText").textContent =
+        `예산 ${budget.toLocaleString()}원 · ${skin} · ${concerns.join("/")} 분석 결과 (${scored.length}개)${extraNote}`;
+
+      const cardList = document.getElementById("cardList");
+      cardList.innerHTML = scored.map((item, i) => {
+        const isPicked = pickedIds.includes(item.id);
+        return `
+          <div class="item-card">
+            <div>
+              <div class="badges">
+                <span class="b-rank">🏆 추천 ${i + 1}위</span>
+                <span class="b-score">AI 적합도 ${item.finalScore}점</span>
+              </div>
+              <div class="meta">${item.brand} · ${item.cat} · ⭐ ${item.rate} (긍정후기 ${item.posRate}%)</div>
+              <div class="title">${item.name}</div>
+              <div class="price-line">
+                <span class="price">${item.price.toLocaleString()}원</span>
+                <span class="unit-price">${unitPriceLabel(item)}</span>
+              </div>
+              <div class="pill-row">
+                <span class="${item.inBudget ? "pill-ok" : "pill-over"}">${item.inBudget ? "✔ 예산 내 구매 가능" : "⚠ 예산 초과"}</span>
+                <span class="pill-pop">🔥 트렌드 ${item.trend}점</span>
+              </div>
+              <div class="reason">
+                <b>🤖 AI 추천 이유</b>
+                ${item.whyText}
+              </div>
+              <div class="detail-list">
+                <div style="color:#15803d;"><b>👍 장점:</b> ${item.good}</div>
+                <div style="color:#b45309;"><b>⚠️ 주의점:</b> ${item.bad} (성분참고: ${item.caution})</div>
+              </div>
             </div>
-
-            <div class="product-meta">${item.brand} · ${item.category} · ⭐ ${item.rating} (긍정후기 ${item.positiveRate}%)</div>
-            <h3 class="product-name">${item.name}</h3>
-
-            <div class="price-row">
-              <span class="price-main">${item.price.toLocaleString()}원</span>
-              <span class="price-unit">${getUnitPriceText(item)}</span>
-            </div>
-
-            <div class="tag-row">
-              <span class="${item.isWithinBudget ? "badge-good" : "badge-warn"}">
-                ${item.isWithinBudget ? "✔ 예산 내 구매 가능" : "⚠ 예산 초과"}
-              </span>
-              <span class="badge-trend">🔥 10대 트렌드 ${item.trendScore}점</span>
-              <span class="badge-good">💎 ${item.valueGrade}</span>
-            </div>
-
-            <div class="ai-reason-box">
-              <strong>🤖 틴코스 AI 추천 이유</strong>
-              ${item.aiReason}
-            </div>
-
-            <div class="pros-cons">
-              <div class="pros-text"><strong>👍 장점:</strong> ${item.posReview}</div>
-              <div class="cons-text"><strong>⚠️ 주의점:</strong> ${item.negReview} (주의성분: ${item.cautionIngredients})</div>
-            </div>
-          </div>
-
-          <div>
-            <div class="review-snippet">
-              <strong>주요 성분:</strong> ${item.keyIngredients.join(", ")}
-            </div>
-            <div class="card-actions">
-              <button type="button" class="btn-outline ${isSelected ? "selected" : ""}" onclick="toggleCompare(${item.id})">
-                ${isSelected ? "✓ 비교함 담김" : "+ 제품 비교 담기"}
+            <div>
+              <div class="ing-box"><b>핵심 성분:</b> ${item.ing.join(", ")}</div>
+              <button type="button" class="cmp-btn ${isPicked ? "picked" : ""}" onclick="togglePick(${item.id})">
+                ${isPicked ? "✓ 비교함 담김" : "+ 비교함에 담기"}
               </button>
             </div>
           </div>
         `;
-
-        productGrid.appendChild(card);
-      });
+      }).join("");
     }
 
-    // 8. 비교함 추가/제거 기능
-    window.toggleCompare = function (productId) {
-      const idx = compareList.indexOf(productId);
+    window.togglePick = function(id) {
+      const idx = pickedIds.indexOf(id);
       if (idx > -1) {
-        compareList.splice(idx, 1);
+        pickedIds.splice(idx, 1);
       } else {
-        if (compareList.length >= 3) {
-          alert("제품 비교는 최대 3개까지 동시에 가능합니다.");
+        if (pickedIds.length >= 3) {
+          alert("최대 3개까지 비교할 수 있습니다.");
           return;
         }
-        compareList.push(productId);
+        pickedIds.push(id);
       }
-      updateCompareBar();
-      runRecommendation();
+      updateBar();
+      renderAll();
     };
 
-    function updateCompareBar() {
-      if (compareList.length === 0) {
-        compareBar.classList.remove("visible");
+    function updateBar() {
+      const bar = document.getElementById("floatBar");
+      if (pickedIds.length === 0) {
+        bar.classList.remove("show");
       } else {
-        compareBar.classList.add("visible");
-        compareBarText.textContent = `비교함에 ${compareList.length}개 제품이 담겼습니다 (최대 3개 비교 가능)`;
+        bar.classList.add("show");
+        document.getElementById("floatMsg").textContent = `선택된 제품 ${pickedIds.length}개 (최대 3개 비교 가능)`;
       }
     }
 
-    clearCompareBtn.addEventListener("click", function () {
-      compareList = [];
-      updateCompareBar();
-      runRecommendation();
+    document.getElementById("budgetInput").addEventListener("input", function() {
+      document.getElementById("budgetLabel").textContent = Number(this.value).toLocaleString() + "원";
     });
 
-    // 9. 비교 모달 열기/닫기
-    openCompareModalBtn.addEventListener("click", function () {
-      if (compareList.length < 2) {
+    document.getElementById("skinChips").addEventListener("click", function(e) {
+      if (!e.target.classList.contains("chip")) return;
+      this.querySelectorAll(".chip").forEach(c => c.classList.remove("on"));
+      e.target.classList.add("on");
+    });
+
+    document.getElementById("concernChips").addEventListener("click", function(e) {
+      if (!e.target.classList.contains("chip")) return;
+      if (e.target.classList.contains("on") && this.querySelectorAll(".chip.on").length === 1) return;
+      e.target.classList.toggle("on");
+    });
+
+    document.getElementById("calcBtn").addEventListener("click", renderAll);
+
+    document.getElementById("resetCmpBtn").addEventListener("click", function() {
+      pickedIds = [];
+      updateBar();
+      renderAll();
+    });
+
+    document.getElementById("showCmpBtn").addEventListener("click", function() {
+      if (pickedIds.length < 2) {
         alert("비교할 제품을 2개 이상 담아주세요!");
         return;
       }
-
-      const selectedProducts = compareList.map(id => PRODUCTS.find(p => p.id === id));
-      const lowestPrice = Math.min(...selectedProducts.map(p => p.price));
-
-      let tableHTML = `<div style="overflow-x:auto;"><table class="compare-table"><thead><tr><th>비교 항목</th>`;
-      selectedProducts.forEach(p => {
-        tableHTML += `<td><strong>${p.name}</strong><br><span style="font-size:0.78rem; color:#6b7280;">${p.brand}</span></td>`;
-      });
-      tableHTML += `</tr></thead><tbody>`;
-
-      tableHTML += `<tr><th>판매 가격</th>${selectedProducts.map(p => `<td><strong style="color:var(--pink-600);">${p.price.toLocaleString()}원</strong> ${p.price === lowestPrice ? '<span class="badge-good">최저가</span>' : ''}</td>`).join("")}</tr>`;
-      tableHTML += `<tr><th>용량 및 단가</th>${selectedProducts.map(p => `<td>${getUnitPriceText(p)}</td>`).join("")}</tr>`;
-      tableHTML += `<tr><th>평점 / 긍정률</th>${selectedProducts.map(p => `<td>⭐ ${p.rating}점 (긍정 ${p.positiveRate}%)</td>`).join("")}</tr>`;
-      tableHTML += `<tr><th>추천 피부</th>${selectedProducts.map(p => `<td>${p.suitableSkins.join(", ")}</td>`).join("")}</tr>`;
-      tableHTML += `<tr><th>핵심 성분</th>${selectedProducts.map(p => `<td>${p.keyIngredients.join(", ")}</td>`).join("")}</tr>`;
-      tableHTML += `<tr><th>주의 성분</th>${selectedProducts.map(p => `<td>${p.cautionIngredients}</td>`).join("")}</tr>`;
-      tableHTML += `<tr><th>긍정 후기 요약</th>${selectedProducts.map(p => `<td>${p.posReview}</td>`).join("")}</tr>`;
-      tableHTML += `<tr><th>아쉬운 점</th>${selectedProducts.map(p => `<td>${p.negReview}</td>`).join("")}</tr>`;
-      tableHTML += `</tbody></table></div>`;
-
-      compareTableContainer.innerHTML = tableHTML;
-      compareModal.classList.add("open");
+      const items = pickedIds.map(id => DB.find(x => x.id === id));
+      const minPrice = Math.min(...items.map(x => x.price));
+      let html = `<div style="overflow-x:auto;"><table><tr><th>항목</th>` +
+        items.map(x => `<td><b>${x.name}</b><br><small>${x.brand}</small></td>`).join("") + `</tr>`;
+      html += `<tr><th>가격</th>` + items.map(x => `<td><b style="color:#db2777;">${x.price.toLocaleString()}원</b> ${x.price === minPrice ? '<span class="pill-ok">최저가</span>' : ''}</td>`).join("") + `</tr>`;
+      html += `<tr><th>용량/단가</th>` + items.map(x => `<td>${unitPriceLabel(x)}</td>`).join("") + `</tr>`;
+      html += `<tr><th>평점/긍정률</th>` + items.map(x => `<td>⭐ ${x.rate} (${x.posRate}%)</td>`).join("") + `</tr>`;
+      html += `<tr><th>추천피부</th>` + items.map(x => `<td>${x.skins.join(", ")}</td>`).join("") + `</tr>`;
+      html += `<tr><th>핵심성분</th>` + items.map(x => `<td>${x.ing.join(", ")}</td>`).join("") + `</tr>`;
+      html += `<tr><th>주의성분</th>` + items.map(x => `<td>${x.caution}</td>`).join("") + `</tr>`;
+      html += `<tr><th>장점요약</th>` + items.map(x => `<td>${x.good}</td>`).join("") + `</tr>`;
+      html += `<tr><th>아쉬운점</th>` + items.map(x => `<td>${x.bad}</td>`).join("") + `</tr></table></div>`;
+      document.getElementById("cmpTableWrap").innerHTML = html;
+      document.getElementById("cmpModal").classList.add("show");
     });
 
-    closeModalBtn.addEventListener("click", function () {
-      compareModal.classList.remove("open");
+    document.getElementById("hideCmpBtn").addEventListener("click", function() {
+      document.getElementById("cmpModal").classList.remove("show");
     });
 
-    compareModal.addEventListener("click", function (e) {
-      if (e.target === compareModal) {
-        compareModal.classList.remove("open");
-      }
-    });
-
-    // 버튼 클릭 및 페이지 최초 로드 시 즉시 실행
-    analyzeBtn.addEventListener("click", runRecommendation);
-    document.addEventListener("DOMContentLoaded", runRecommendation);
-    
+    // 스크립트 로드 즉시 초기 추천 목록 출력
+    renderAll();
+  </script>
+</body>
+</html>
